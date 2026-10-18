@@ -16,3 +16,12 @@ docs/*.docx
 docs/*.pdf
 evidence/
 
+
+# 实验资料和辅助工具不进入源码仓库
+docs/*
+!docs/protocol.md
+!docs/design.md
+!docs/diagrams/
+!docs/diagrams/**
+tools/
+交给Codex_实验一全流程执行指令.md
