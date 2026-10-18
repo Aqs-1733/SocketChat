@@ -1,0 +1,7 @@
+digraph G {
+ graph [rankdir=TB,bgcolor="white", nodesep=.2, ranksep=.3, pad=.2];
+ node [shape=box,style=rounded,fontname="Noto Sans CJK SC",fontsize=12,color="#303030",margin="0.16,0.08"];
+ edge [color="#404040",arrowsize=.7];
+ a[label="WSAStartup 初始化"]; b[label="socket 创建 TCP 套接字"];c[label="bind 绑定 IP/端口"];d[label="listen 开始监听"];e[label="accept 等待新连接"];f[label="CreateThread 建立处理线程"];g[label="recv 接收并缓存字节"];h[shape=diamond,label="提取完整 LF 帧？"];i[label="解析 JOIN / TEXT / WHO / QUIT"];j[label="校验、添加时间戳、广播或应答"];k[shape=diamond,label="退出 / 断开？"];l[label="移除用户，关闭 Socket，通知在线用户"];
+ a->b->c->d->e->f->g->h; f->e [constraint=false];h->g[label="否"];h->i[label="是"];i->j->k;k->g[label="否"];k->l[label="是"];
+}

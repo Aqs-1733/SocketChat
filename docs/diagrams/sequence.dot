@@ -1,0 +1,14 @@
+digraph G {
+ graph [rankdir=TB,bgcolor="white", nodesep=.15, ranksep=.22, pad=.2];
+ node [shape=box,style="rounded",fontname="Noto Sans CJK SC",fontsize=11,color="#303030"];
+ a[label="1 客户端 A 发起 TCP connect → 服务器 accept"];
+ b[label="2 A → S : JOIN|Alice"];
+ c[label="3 S → A : WELCOME|Alice|时间"];
+ d[label="4 B → S : JOIN|Bob → WELCOME"];
+ e[label="5 A → S : TEXT|1|你好 Bob"];
+ f[label="6 S 校验序号与正文，并生成本地时间"];
+ g[label="7 S → A、B : MSG|时间|Alice|1|你好 Bob"];
+ h[label="8 B → S : WHO → USERS|Alice,Bob"];
+ i[label="9 A → S : QUIT → BYE → NOTICE 离线"];
+ a->b->c->d->e->f->g->h->i;
+}

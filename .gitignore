@@ -1,0 +1,18 @@
+# 本地构建产物、缓存和操作系统临时文件
+bin/*.exe
+bin/server
+bin/client
+bin/protocol_tests
+*.obj
+*.o
+*.pdb
+*.ilk
+*.pyc
+__pycache__/
+.DS_Store
+bin/
+*.zip
+docs/*.docx
+docs/*.pdf
+evidence/
+
