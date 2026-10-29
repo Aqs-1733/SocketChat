@@ -1,0 +1,5 @@
+void broadcast(const std::string& message) {
+    for (const SessionPtr& user : online_snapshot()) {
+        send_session(user, message);
+    }
+}

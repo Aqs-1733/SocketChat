@@ -1,0 +1,12 @@
+bool send_session(const SessionPtr& session, const std::string& message) {
+    std::lock_guard<std::mutex> guard(session->send_lock);
+    if (session->closed.load()) {
+        return false;
+    }
+    if (chat::send_frame(session->sock, message)) {
+        return true;
+    }
+    session->closed.store(true);
+    shutdown_socket(session->sock);
+    return false;
+}

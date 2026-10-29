@@ -1,0 +1,8 @@
+bool is_valid_name(std::string_view name) {
+    if (name.empty() || name.size() > MAX_USERNAME) return false;
+    for (const unsigned char c : name) {
+        if (!((c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+              (c >= '0' && c <= '9') || c == '_')) return false;
+    }
+    return true;
+}

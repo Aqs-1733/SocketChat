@@ -107,6 +107,39 @@ bool get_msg(Peer& peer, const std::string& who, const std::string& seq, const s
     return false;
 }
 
+// 检查私聊帧是否包含预期双方和正文。
+bool get_private_message(Peer& peer, const std::string& sender,
+                         const std::string& receiver, const std::string& seq,
+                         const std::string& body) {
+    for (int tries = 0; tries < 100; ++tries) {
+        std::string line;
+        if (!next_frame(peer, line)) return false;
+        if (line.rfind("PM|", 0) != 0) continue;
+        const auto fields = chat::split_fields(line, 5);
+        if (fields.size() == 6 && fields[2] == sender && fields[3] == receiver &&
+            fields[4] == seq && fields[5] == body && fields[1].size() == 19) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// 检查群消息帧是否包含预期群名和正文。
+bool get_group_message(Peer& peer, const std::string& group,
+                       const std::string& sender, const std::string& seq,
+                       const std::string& body) {
+    for (int tries = 0; tries < 100; ++tries) {
+        std::string line;
+        if (!next_frame(peer, line)) return false;
+        if (line.rfind("GMSG|", 0) != 0) continue;
+        const auto fields = chat::split_fields(line, 5);
+        if (fields.size() == 6 && fields[2] == group && fields[3] == sender &&
+            fields[4] == seq && fields[5] == body && fields[1].size() == 19) {
+            return true;
+        }
+    }
+    return false;
+}
 int main(int argc, char** argv) {
     if (argc != 3) { std::cerr << "Usage: integration_tests <IPv4> <port>\n"; return 2; }
     const char* host = argv[1];
@@ -181,6 +214,8 @@ int main(int argc, char** argv) {
         check(sent_ok.load(), "T17 three senders each submitted 100 messages");
         auto receive_300 = [](Peer& p) {
             std::set<std::string> unique;
+            std::size_t duplicates = 0;
+            std::size_t invalid = 0;
             for (int attempts = 0; attempts < 450; ++attempts) {
                 if (unique.size() == 300) break;
                 std::string line;
@@ -191,9 +226,18 @@ int main(int argc, char** argv) {
                     continue;
                 }
                 if (f[2] != "LoadA" && f[2] != "LoadB" && f[2] != "LoadC") continue;
-                if (f[4] != "load_" + f[2] + "_" + f[3]) continue;
-                unique.insert(f[2] + "|" + f[3]);
+                std::uint64_t seq = 0;
+                if (!chat::parse_sequence(f[3], seq) || seq > 100 ||
+                    f[4] != "load_" + f[2] + "_" + f[3] || f[1].size() != 19) {
+                    ++invalid;
+                    continue;
+                }
+                if (!unique.insert(f[2] + "|" + f[3]).second) ++duplicates;
             }
+            std::cout << "[DELIVERY] expected=300 received=" << unique.size()
+                      << " missing=" << 300 - unique.size() << " duplicate=" << duplicates
+                      << " invalid=" << invalid << '\n';
+            if (duplicates || invalid) return std::size_t{0};
             return unique.size();
         };
         const auto cx = receive_300(x), cy = receive_300(y), cz = receive_300(z);
@@ -201,6 +245,51 @@ int main(int argc, char** argv) {
         check(cx == 300 && cy == 300 && cz == 300, "T18 900 total deliveries checked without missing sequences");
     }
     close_peer(x); close_peer(y); close_peer(z);
+
+    // 私聊和群聊功能测试。
+    Peer dawn, evan, faye;
+    const bool feature_login = login(dawn, host, port, "Dawn") &&
+                               login(evan, host, port, "Evan") &&
+                               login(faye, host, port, "Faye");
+    check(feature_login, "T19 three users ready for private and group chat");
+    if (feature_login) {
+        const std::string private_text = "private 中文 English|message";
+        check(chat::send_frame(dawn.sock, "PM|1|Evan|" + private_text) &&
+              get_private_message(dawn, "Dawn", "Evan", "1", private_text) &&
+              get_private_message(evan, "Dawn", "Evan", "1", private_text),
+              "T20 private message delivered to sender and target");
+
+        const bool created = chat::send_frame(dawn.sock, "GROUP|CREATE|Study") &&
+                             expect_prefix(dawn, "GROUP_OK|CREATE|Study");
+        const bool joined = chat::send_frame(evan.sock, "GROUP|JOIN|Study") &&
+                            expect_prefix(evan, "GROUP_OK|JOIN|Study");
+        const bool added = chat::send_frame(dawn.sock, "GROUP|ADD|Study|Faye") &&
+                           expect_prefix(dawn, "GROUP_OK|ADD|Study|Faye");
+        std::string groups;
+        const bool listed = chat::send_frame(dawn.sock, "GROUP|LIST") &&
+                            expect_prefix(dawn, "GROUPS|", &groups) &&
+                            groups.find("Study") != std::string::npos;
+        check(created && joined && added && listed,
+              "T21 group create, member selection and list");
+
+        const std::string group_text = "Study group message 中文";
+        check(chat::send_frame(dawn.sock, "GTEXT|2|Study|" + group_text) &&
+              get_group_message(dawn, "Study", "Dawn", "2", group_text) &&
+              get_group_message(evan, "Study", "Dawn", "2", group_text),
+              "T22 group message delivered to selected members");
+
+        check(get_group_message(faye, "Study", "Dawn", "2", group_text),
+              "T23 selected member received group message");
+
+        const bool left = chat::send_frame(evan.sock, "GROUP|LEAVE|Study") &&
+                          expect_prefix(evan, "GROUP_OK|LEAVE|Study");
+        const bool missing_user = chat::send_frame(faye.sock, "PM|1|Ghost|offline target") &&
+                                  expect_prefix(faye, "ERR|NO_USER|");
+        const bool rejected = chat::send_frame(evan.sock, "GTEXT|1|Study|not a member") &&
+                              expect_prefix(evan, "ERR|NOT_MEMBER|");
+        check(left && missing_user && rejected, "T24 group leave and message sequence check");
+    }
+    close_peer(dawn); close_peer(evan); close_peer(faye);
     std::cout << "TOTAL PASS=" << passes << " FAIL=" << fails << '\n';
     cleanup_sockets();
     return fails ? 1 : 0;

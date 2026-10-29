@@ -1,0 +1,17 @@
+bool send_all(socket_handle sock, std::string_view bytes) {
+    std::size_t sent = 0;
+    while (sent < bytes.size()) {
+        const auto remaining = bytes.size() - sent;
+        // 处理 send 返回值。
+        const int requested = static_cast<int>(remaining > 16384 ? 16384 : remaining);
+        #ifdef _WIN32
+        const int send_flags = 0;
+#else
+        const int send_flags = MSG_NOSIGNAL;
+#endif
+        const int n = ::send(sock, bytes.data() + sent, requested, send_flags);
+        if (n <= 0) return false;
+        sent += static_cast<std::size_t>(n);
+    }
+    return true;
+}

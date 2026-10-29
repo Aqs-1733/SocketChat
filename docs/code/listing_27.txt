@@ -1,0 +1,15 @@
+void quit_chat() {
+    if (!connected.load() || disconnecting) {
+        return;
+    }
+
+    disconnecting = true;
+    append_activity(L"发送 QUIT，正在断开服务器连接");
+    if (chat::send_frame(server_socket, "QUIT")) {
+        shutdown(server_socket, SD_SEND);
+    } else {
+        shutdown(server_socket, SD_BOTH);
+    }
+    SetTimer(main_window, ID_DISCONNECT_TIMER, 2000, nullptr);
+    update_controls();
+}

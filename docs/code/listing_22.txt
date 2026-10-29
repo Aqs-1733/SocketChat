@@ -1,0 +1,19 @@
+        const std::string& group_name = fields[2];
+        const std::string& target_name = fields[3];
+        std::string error;
+        {
+            std::lock_guard<std::mutex> guard(state_lock);
+            const auto group = chat_groups.find(group_name);
+            if (group == chat_groups.end()) {
+                error = "NO_GROUP";
+            } else if (group->second.count(session->name) == 0) {
+                error = "NOT_MEMBER";
+            } else if (online_users.count(target_name) == 0) {
+                error = "NO_USER";
+            } else if (!group->second.insert(target_name).second) {
+                error = "ALREADY_MEMBER";
+            }
+        }
+        if (error == "NO_GROUP") {
+            reply_error(session, "NO_GROUP", "Group does not exist");
+            return;

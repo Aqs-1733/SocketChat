@@ -1,0 +1,9 @@
+SocketChat/
+  src/        协议、服务器、命令行客户端、图形客户端
+  tests/      C++ 单元测试和网络测试
+  bin/        Windows 可执行文件
+  scripts/    启动、测试和抓包脚本
+  docs/       协议、设计图和实验报告
+  evidence/   测试日志、截图和抓包
+  build.bat
+  build_gui.bat

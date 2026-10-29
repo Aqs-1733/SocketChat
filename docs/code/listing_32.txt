@@ -1,0 +1,16 @@
+bool next_frame(Peer& peer, std::string& out) {
+    if (!peer.queued.empty()) {
+        out = peer.queued.front(); peer.queued.erase(peer.queued.begin()); return true;
+    }
+    char buf[4096];
+    for (;;) {
+        const int n = ::recv(peer.sock, buf, sizeof(buf), 0);
+        if (n <= 0) return false;
+        std::vector<std::string> frames;
+        if (!chat::extract_frames(peer.pending, buf, static_cast<std::size_t>(n), frames)) return false;
+        for (auto& frame : frames) peer.queued.push_back(std::move(frame));
+        if (!peer.queued.empty()) {
+            out = peer.queued.front(); peer.queued.erase(peer.queued.begin()); return true;
+        }
+    }
+}

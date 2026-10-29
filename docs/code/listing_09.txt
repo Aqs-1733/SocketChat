@@ -1,0 +1,36 @@
+    for (;;) {
+        sockaddr_in remote{};
+#ifdef _WIN32
+        int address_length = sizeof(remote);
+#else
+        socklen_t address_length = sizeof(remote);
+#endif
+        socket_handle client = ::accept(listener, reinterpret_cast<sockaddr*>(&remote),
+                                        &address_length);
+        if (client == BAD_SOCKET) {
+            log_line("accept() failed: " + std::to_string(socket_last_error()));
+            break;
+        }
+        if (active_connections.fetch_add(1) >= MAX_CONNECTIONS) {
+            --active_connections;
+            chat::send_frame(client, "ERR|BUSY|Too many connections");
+            close_socket(client);
+            continue;
+        }
+
+        const SessionPtr session = std::make_shared<Session>(client);
+        auto* args = new WorkerArgs{session};
+#ifdef _WIN32
+        const HANDLE thread = CreateThread(nullptr, 0, worker_entry, args, 0, nullptr);
+        if (thread == nullptr) {
+            delete args;
+            disconnect_session(session);
+            --active_connections;
+            log_line("CreateThread() failed");
+            continue;
+        }
+        CloseHandle(thread);
+#else
+        std::thread(worker_entry, args).detach();
+#endif
+    }

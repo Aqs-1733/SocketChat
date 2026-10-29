@@ -1,0 +1,8 @@
+std::vector<SessionPtr> online_snapshot() {
+    std::lock_guard<std::mutex> guard(state_lock);
+    std::vector<SessionPtr> users;
+    for (const auto& item : online_users) {
+        users.push_back(item.second);
+    }
+    return users;
+}

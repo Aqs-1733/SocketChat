@@ -1,8 +1,4 @@
-# 本地构建产物、缓存和操作系统临时文件
-bin/*.exe
-bin/server
-bin/client
-bin/protocol_tests
+bin/
 *.obj
 *.o
 *.pdb
@@ -10,18 +6,8 @@ bin/protocol_tests
 *.pyc
 __pycache__/
 .DS_Store
-bin/
-*.zip
-docs/*.docx
-docs/*.pdf
-evidence/
-
-
-# 实验资料和辅助工具不进入源码仓库
-docs/*
-!docs/protocol.md
-!docs/design.md
-!docs/diagrams/
-!docs/diagrams/**
-tools/
-交给Codex_实验一全流程执行指令.md
+docs/*.aux
+docs/*.log
+docs/*.out
+docs/*.toc
+docs/*.synctex.gz

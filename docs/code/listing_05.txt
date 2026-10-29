@@ -1,0 +1,10 @@
+struct Session {
+    explicit Session(socket_handle socket_value) : sock(socket_value) {}
+
+    socket_handle sock;
+    std::string name;
+    std::mutex send_lock;
+    std::atomic<bool> closed{false};
+    bool joined = false;
+    std::uint64_t next_seq = 1;
+};

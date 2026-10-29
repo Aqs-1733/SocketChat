@@ -1,0 +1,4 @@
+    if (frame.rfind("ERR|", 0) == 0) {
+        append_activity(L"[错误] " + from_utf8(frame.substr(4)));
+        return;
+    }

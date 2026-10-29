@@ -1,0 +1,21 @@
+
+    SessionPtr target;
+    {
+        std::lock_guard<std::mutex> guard(state_lock);
+        const auto user = online_users.find(fields[2]);
+        if (user != online_users.end()) {
+            target = user->second;
+        }
+    }
+    if (!target) {
+        reply_error(session, "NO_USER", "Private-message target is offline");
+        return;
+    }
+
+    const std::string message = "PM|" + chat::local_timestamp() + "|" + session->name +
+                                "|" + fields[2] + "|" + fields[1] + "|" + fields[3];
+    send_session(session, message);
+    if (target != session) {
+        send_session(target, message);
+    }
+    log_line("PM from=" + session->name + " to=" + fields[2] + " seq=" + fields[1]);

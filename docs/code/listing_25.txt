@@ -1,0 +1,33 @@
+    receive_thread = CreateThread(
+        nullptr, 0,
+        [](LPVOID parameter) -> DWORD {
+            const SOCKET connection = static_cast<SOCKET>(
+                reinterpret_cast<UINT_PTR>(parameter));
+            std::string pending;
+            char buffer[4096];
+
+            for (;;) {
+                const int received = ::recv(connection, buffer, sizeof(buffer), 0);
+                if (received <= 0) {
+                    break;
+                }
+
+                std::vector<std::string> frames;
+                if (!chat::extract_frames(
+                        pending, buffer, static_cast<std::size_t>(received), frames)) {
+                    break;
+                }
+
+                for (const std::string& frame : frames) {
+                    auto* copy = new std::string(frame);
+                    if (!PostMessageW(main_window, WM_CHAT_FRAME, 0,
+                                      reinterpret_cast<LPARAM>(copy))) {
+                        delete copy;
+                    }
+                }
+            }
+
+            PostMessageW(main_window, WM_CHAT_DISCONNECTED, 0, 0);
+            return 0;
+        },
+        reinterpret_cast<LPVOID>(static_cast<UINT_PTR>(connection)), 0, nullptr);

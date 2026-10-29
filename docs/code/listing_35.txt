@@ -1,0 +1,5 @@
+    check(chat::send_all(b.sock, "TEXT|1|first line\nTEXT|2|second line\n") &&
+          get_msg(a, "Bob", "1", "first line") && get_msg(a, "Bob", "2", "second line") &&
+          get_msg(b, "Bob", "1", "first line") && get_msg(b, "Bob", "2", "second line") &&
+          get_msg(c, "Bob", "1", "first line") && get_msg(c, "Bob", "2", "second line"),
+          "T09 coalesced TCP sends correctly separated");

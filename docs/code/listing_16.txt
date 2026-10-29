@@ -1,0 +1,18 @@
+std::string to_utf8(const std::wstring& wide) {
+    if (wide.empty()) {
+        return {};
+    }
+
+    const int count = WideCharToMultiByte(
+        CP_UTF8, WC_ERR_INVALID_CHARS, wide.data(),
+        static_cast<int>(wide.size()), nullptr, 0, nullptr, nullptr);
+    if (count <= 0) {
+        return {};
+    }
+
+    std::string result(static_cast<std::size_t>(count), '\0');
+    WideCharToMultiByte(
+        CP_UTF8, WC_ERR_INVALID_CHARS, wide.data(),
+        static_cast<int>(wide.size()), result.data(), count, nullptr, nullptr);
+    return result;
+}

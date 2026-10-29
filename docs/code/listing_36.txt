@@ -1,0 +1,12 @@
+        auto send_100 = [&sent_ok](socket_handle sock, const char* name) {
+            for (int i = 1; i <= 100; ++i) {
+                if (!chat::send_frame(sock, "TEXT|" + std::to_string(i) + "|load_" + name + "_" + std::to_string(i))) {
+                    sent_ok.store(false); return;
+                }
+            }
+        };
+        std::thread tx(send_100, x.sock, "LoadA");
+        std::thread ty(send_100, y.sock, "LoadB");
+        std::thread tz(send_100, z.sock, "LoadC");
+        tx.join(); ty.join(); tz.join();
+        check(sent_ok.load(), "T17 three senders each submitted 100 messages");

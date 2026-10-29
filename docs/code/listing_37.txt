@@ -1,0 +1,30 @@
+        auto receive_300 = [](Peer& p) {
+            std::set<std::string> unique;
+            std::size_t duplicates = 0;
+            std::size_t invalid = 0;
+            for (int attempts = 0; attempts < 450; ++attempts) {
+                if (unique.size() == 300) break;
+                std::string line;
+                if (!next_frame(p, line)) break;
+                if (line.rfind("MSG|", 0) != 0) continue;
+                auto f = chat::split_fields(line, 4);
+                if (f.size() != 5) {
+                    continue;
+                }
+                if (f[2] != "LoadA" && f[2] != "LoadB" && f[2] != "LoadC") continue;
+                std::uint64_t seq = 0;
+                if (!chat::parse_sequence(f[3], seq) || seq > 100 ||
+                    f[4] != "load_" + f[2] + "_" + f[3] || f[1].size() != 19) {
+                    ++invalid;
+                    continue;
+                }
+                if (!unique.insert(f[2] + "|" + f[3]).second) ++duplicates;
+            }
+            std::cout << "[DELIVERY] expected=300 received=" << unique.size()
+                      << " missing=" << 300 - unique.size() << " duplicate=" << duplicates
+                      << " invalid=" << invalid << '\n';
+            if (duplicates || invalid) return std::size_t{0};
+            return unique.size();
+        };
+        const auto cx = receive_300(x), cy = receive_300(y), cz = receive_300(z);
+        std::cout << "[COUNT] expected=300 each, LoadA=" << cx << " LoadB=" << cy << " LoadC=" << cz << '\n';

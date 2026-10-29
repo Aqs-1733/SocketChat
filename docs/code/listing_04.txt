@@ -1,0 +1,7 @@
+bool is_valid_body(std::string_view body) {
+    if (body.empty() || body.size() > MAX_BODY || !is_valid_utf8(body)) return false;
+    for (unsigned char c : body) {
+        if (c == '\n' || c == '\r' || c == 0 || (c < 0x20 && c != '\t') || c == 0x7F) return false;
+    }
+    return true;
+}

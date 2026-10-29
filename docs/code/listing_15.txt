@@ -1,0 +1,13 @@
+bool parse_sequence(std::string_view text, std::uint64_t& value) {
+    if (text.empty() || text.size() > 20) return false;
+    std::uint64_t n = 0;
+    for (char c : text) {
+        if (c < '0' || c > '9') return false;
+        const auto digit = static_cast<unsigned>(c - '0');
+        if (n > (std::numeric_limits<std::uint64_t>::max() - digit) / 10) return false;
+        n = n * 10 + digit;
+    }
+    if (n == 0) return false;
+    value = n;
+    return true;
+}

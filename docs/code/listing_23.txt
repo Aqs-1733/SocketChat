@@ -1,0 +1,38 @@
+void handle_group_text(const SessionPtr& session, const std::string& line) {
+    const auto fields = chat::split_fields(line, 3);
+    if (fields.size() != 4) {
+        reply_error(session, "BAD_FORMAT", "Use GTEXT|seq|group|content");
+        return;
+    }
+
+    std::uint64_t sequence = 0;
+    if (!accept_next_sequence(session, fields[1], sequence)) {
+        return;
+    }
+    ++session->next_seq;
+    if (!chat::is_valid_name(fields[2])) {
+        reply_error(session, "BAD_GROUP", "Invalid group name");
+        return;
+    }
+    if (!chat::is_valid_body(fields[3])) {
+        reply_error(session, fields[3].size() > chat::MAX_BODY ? "TOO_LONG" : "BAD_TEXT",
+                    "Content must be valid UTF-8 and at most 4096 bytes");
+        return;
+    }
+
+    bool member = false;
+    {
+        std::lock_guard<std::mutex> guard(state_lock);
+        const auto group = chat_groups.find(fields[2]);
+        member = group != chat_groups.end() && group->second.count(session->name) != 0;
+    }
+    if (!member) {
+        reply_error(session, "NOT_MEMBER", "Join the group before sending a group message");
+        return;
+    }
+
+    const std::string message = "GMSG|" + chat::local_timestamp() + "|" + fields[2] +
+                                "|" + session->name + "|" + fields[1] + "|" + fields[3];
+    broadcast_group(fields[2], message);
+    log_line("GMSG group=" + fields[2] + " user=" + session->name + " seq=" + fields[1]);
+}

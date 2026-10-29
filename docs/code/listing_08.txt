@@ -1,0 +1,26 @@
+    if (!init_sockets()) {
+        std::cerr << "Winsock initialization failed\n";
+        return 2;
+    }
+
+    socket_handle listener = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (listener == BAD_SOCKET) {
+        std::cerr << "socket() failed\n";
+        cleanup_sockets();
+        return 2;
+    }
+
+    const int reuse = 1;
+    setsockopt(listener, SOL_SOCKET, SO_REUSEADDR,
+               reinterpret_cast<const char*>(&reuse), sizeof(reuse));
+
+    sockaddr_in address{};
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    address.sin_addr.s_addr = htonl(argc == 3 ? INADDR_ANY : INADDR_LOOPBACK);
+    if (::bind(listener, reinterpret_cast<const sockaddr*>(&address), sizeof(address)) != 0 ||
+        ::listen(listener, SOMAXCONN) != 0) {
+        std::cerr << "bind()/listen() failed: " << socket_last_error() << '\n';
+        close_socket(listener);
+        cleanup_sockets();
+        return 2;

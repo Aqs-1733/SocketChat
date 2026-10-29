@@ -1,0 +1,1262 @@
+[
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 4,
+    "text": "JOIN|Alice"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 6,
+    "text": "WELCOME|Alice|2026-10-27 20:02:55"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 8,
+    "text": "NOTICE|2026-10-27 20:02:55|Alice joined the room"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 10,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 12,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 13,
+    "text": "USERS|Alice"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 16,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 18,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 19,
+    "text": "USERS|Alice"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 20,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 21,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 26,
+    "text": "JOIN|Bob"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 28,
+    "text": "WELCOME|Bob|2026-10-27 20:03:29"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 30,
+    "text": "NOTICE|2026-10-27 20:03:29|Bob joined the room"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 32,
+    "text": "NOTICE|2026-10-27 20:03:29|Bob joined the room"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 34,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 36,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 37,
+    "text": "USERS|Alice,Bob"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 40,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 42,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 44,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 45,
+    "text": "USERS|Alice,Bob"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 48,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 50,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 52,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 53,
+    "text": "USERS|Alice,Bob"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 56,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 61,
+    "text": "JOIN|Charlie"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 63,
+    "text": "WELCOME|Charlie|2026-10-27 20:03:44"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 65,
+    "text": "NOTICE|2026-10-27 20:03:44|Charlie joined the room"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 67,
+    "text": "NOTICE|2026-10-27 20:03:44|Charlie joined the room"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 69,
+    "text": "NOTICE|2026-10-27 20:03:44|Charlie joined the room"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 71,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 73,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 74,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 75,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 78,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 80,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 82,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 85,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 87,
+    "text": "WHO"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 89,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 90,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 93,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 95,
+    "text": "WHO"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 97,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 99,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 101,
+    "text": "GROUPS|"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 103,
+    "text": "TEXT|1|抓公共消息，大家好，Hello TCP!"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 105,
+    "text": "MSG|2026-10-27 20:05:43|Alice|1|抓公共消息，大家好，Hello TCP!"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 107,
+    "text": "MSG|2026-10-27 20:05:43|Alice|1|抓公共消息，大家好，Hello TCP!"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 109,
+    "text": "MSG|2026-10-27 20:05:43|Alice|1|抓公共消息，大家好，Hello TCP!"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 111,
+    "text": "PM|2|Bob|抓私聊，Hi，Bob"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 113,
+    "text": "PM|2026-10-27 20:06:58|Alice|Bob|2|抓私聊，Hi，Bob"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 115,
+    "text": "PM|2026-10-27 20:06:58|Alice|Bob|2|抓私聊，Hi，Bob"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 117,
+    "text": "GROUP|CREATE|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 119,
+    "text": "GROUP_OK|CREATE|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 121,
+    "text": "GNOTICE|2026-10-27 20:07:52|Chat1|Alice created and joined the group"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 123,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 125,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 127,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 129,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 131,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 133,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 134,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 137,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 139,
+    "text": "GROUP|ADD|Chat1|Bob"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 141,
+    "text": "GROUP_OK|ADD|Chat1|Bob"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 143,
+    "text": "GNOTICE|2026-10-27 20:08:26|Chat1|Alice added Bob"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 145,
+    "text": "GNOTICE|2026-10-27 20:08:26|Chat1|Alice added Bob"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 147,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 149,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 151,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 153,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 155,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 157,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 158,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 161,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 163,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 165,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 166,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 169,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 171,
+    "text": "GROUP|ADD|Chat1|Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 173,
+    "text": "GROUP_OK|ADD|Chat1|Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 175,
+    "text": "GNOTICE|2026-10-27 20:09:00|Chat1|Alice added Charlie"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 177,
+    "text": "GNOTICE|2026-10-27 20:09:00|Chat1|Alice added Charlie"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 179,
+    "text": "GNOTICE|2026-10-27 20:09:00|Chat1|Alice added Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 180,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 182,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 185,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 187,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 189,
+    "text": "WHO"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 191,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 192,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 195,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 197,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 199,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 200,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 203,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 205,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 207,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 209,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 211,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 213,
+    "text": "GTEXT|3|Chat1|大家好，Hello group!"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 215,
+    "text": "GMSG|2026-10-27 20:09:54|Chat1|Alice|3|大家好，Hello group!"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 217,
+    "text": "GMSG|2026-10-27 20:09:54|Chat1|Alice|3|大家好，Hello group!"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 219,
+    "text": "GMSG|2026-10-27 20:09:54|Chat1|Alice|3|大家好，Hello group!"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 221,
+    "text": "TEXT|1|hello早上好1111"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 223,
+    "text": "MSG|2026-10-27 20:10:41|Bob|1|hello早上好1111"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 225,
+    "text": "MSG|2026-10-27 20:10:41|Bob|1|hello早上好1111"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 227,
+    "text": "MSG|2026-10-27 20:10:41|Bob|1|hello早上好1111"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 229,
+    "text": "GTEXT|2|Chat1|hello晚上好1111"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 231,
+    "text": "GMSG|2026-10-27 20:11:56|Chat1|Bob|2|hello晚上好1111"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 233,
+    "text": "GMSG|2026-10-27 20:11:56|Chat1|Bob|2|hello晚上好1111"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 235,
+    "text": "GMSG|2026-10-27 20:11:56|Chat1|Bob|2|hello晚上好1111"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 237,
+    "text": "GROUP|LEAVE|Chat1"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 239,
+    "text": "GROUP_OK|LEAVE|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 241,
+    "text": "GNOTICE|2026-10-27 20:12:22|Chat1|Charlie left the group"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 243,
+    "text": "GNOTICE|2026-10-27 20:12:22|Chat1|Charlie left the group"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 245,
+    "text": "WHO"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 247,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 248,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 250,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 252,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 254,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 255,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 258,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 260,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 262,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 264,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 266,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 2,
+    "src": 64654,
+    "dst": 8888,
+    "frame": 268,
+    "text": "QUIT"
+  },
+  {
+    "stream": 2,
+    "src": 8888,
+    "dst": 64654,
+    "frame": 271,
+    "text": "BYE|2026-10-27 20:13:09"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 276,
+    "text": "NOTICE|2026-10-27 20:13:09|Charlie left the room"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 278,
+    "text": "NOTICE|2026-10-27 20:13:09|Charlie left the room"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 280,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 282,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 283,
+    "text": "USERS|Alice,Bob"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 286,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 288,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 290,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 291,
+    "text": "USERS|Alice,Bob"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 294,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 3,
+    "src": 59815,
+    "dst": 8888,
+    "frame": 299,
+    "text": "JOIN|Charlie"
+  },
+  {
+    "stream": 3,
+    "src": 8888,
+    "dst": 59815,
+    "frame": 301,
+    "text": "WELCOME|Charlie|2026-10-27 20:14:34"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 303,
+    "text": "NOTICE|2026-10-27 20:14:34|Charlie joined the room"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 305,
+    "text": "NOTICE|2026-10-27 20:14:34|Charlie joined the room"
+  },
+  {
+    "stream": 3,
+    "src": 8888,
+    "dst": 59815,
+    "frame": 307,
+    "text": "NOTICE|2026-10-27 20:14:34|Charlie joined the room"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 309,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 311,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 312,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 314,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 316,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 317,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 320,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 323,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 3,
+    "src": 59815,
+    "dst": 8888,
+    "frame": 325,
+    "text": "WHO"
+  },
+  {
+    "stream": 3,
+    "src": 59815,
+    "dst": 8888,
+    "frame": 327,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 3,
+    "src": 8888,
+    "dst": 59815,
+    "frame": 328,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 3,
+    "src": 8888,
+    "dst": 59815,
+    "frame": 330,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 3,
+    "src": 59815,
+    "dst": 8888,
+    "frame": 332,
+    "text": "WHO"
+  },
+  {
+    "stream": 3,
+    "src": 59815,
+    "dst": 8888,
+    "frame": 334,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 3,
+    "src": 8888,
+    "dst": 59815,
+    "frame": 335,
+    "text": "USERS|Alice,Bob,Charlie"
+  },
+  {
+    "stream": 3,
+    "src": 8888,
+    "dst": 59815,
+    "frame": 338,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 3,
+    "src": 59815,
+    "dst": 8888,
+    "frame": 340,
+    "text": "TEXT|1|我回来了！"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 342,
+    "text": "MSG|2026-10-27 20:15:16|Charlie|1|我回来了！"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 344,
+    "text": "MSG|2026-10-27 20:15:16|Charlie|1|我回来了！"
+  },
+  {
+    "stream": 3,
+    "src": 8888,
+    "dst": 59815,
+    "frame": 346,
+    "text": "MSG|2026-10-27 20:15:16|Charlie|1|我回来了！"
+  },
+  {
+    "stream": 3,
+    "src": 59815,
+    "dst": 8888,
+    "frame": 348,
+    "text": "QUIT"
+  },
+  {
+    "stream": 3,
+    "src": 8888,
+    "dst": 59815,
+    "frame": 352,
+    "text": "BYE|2026-10-27 20:16:59"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 356,
+    "text": "NOTICE|2026-10-27 20:16:59|Charlie left the room"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 358,
+    "text": "NOTICE|2026-10-27 20:16:59|Charlie left the room"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 360,
+    "text": "WHO"
+  },
+  {
+    "stream": 0,
+    "src": 50210,
+    "dst": 8888,
+    "frame": 362,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 363,
+    "text": "USERS|Alice,Bob"
+  },
+  {
+    "stream": 0,
+    "src": 8888,
+    "dst": 50210,
+    "frame": 366,
+    "text": "GROUPS|Chat1"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 368,
+    "text": "WHO"
+  },
+  {
+    "stream": 1,
+    "src": 52643,
+    "dst": 8888,
+    "frame": 370,
+    "text": "GROUP|LIST"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 371,
+    "text": "USERS|Alice,Bob"
+  },
+  {
+    "stream": 1,
+    "src": 8888,
+    "dst": 52643,
+    "frame": 374,
+    "text": "GROUPS|Chat1"
+  }
+]

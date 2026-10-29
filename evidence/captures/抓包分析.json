@@ -1,0 +1,122 @@
+{
+  "packets": 375,
+  "syn": 4,
+  "syn_ack": 4,
+  "fin": 4,
+  "rst": 0,
+  "retransmission": 0,
+  "lost_segment": 0,
+  "duplicate_ack": 0,
+  "streams": [
+    0,
+    1,
+    2,
+    3
+  ],
+  "application_frames": 180,
+  "chat_requests": [
+    {
+      "stream": 0,
+      "src": 50210,
+      "dst": 8888,
+      "frame": 103,
+      "text": "TEXT|1|抓公共消息，大家好，Hello TCP!"
+    },
+    {
+      "stream": 0,
+      "src": 50210,
+      "dst": 8888,
+      "frame": 111,
+      "text": "PM|2|Bob|抓私聊，Hi，Bob"
+    },
+    {
+      "stream": 0,
+      "src": 50210,
+      "dst": 8888,
+      "frame": 213,
+      "text": "GTEXT|3|Chat1|大家好，Hello group!"
+    },
+    {
+      "stream": 1,
+      "src": 52643,
+      "dst": 8888,
+      "frame": 221,
+      "text": "TEXT|1|hello早上好1111"
+    },
+    {
+      "stream": 1,
+      "src": 52643,
+      "dst": 8888,
+      "frame": 229,
+      "text": "GTEXT|2|Chat1|hello晚上好1111"
+    },
+    {
+      "stream": 3,
+      "src": 59815,
+      "dst": 8888,
+      "frame": 340,
+      "text": "TEXT|1|我回来了！"
+    }
+  ],
+  "joins": [
+    {
+      "stream": 0,
+      "src": 50210,
+      "dst": 8888,
+      "frame": 4,
+      "text": "JOIN|Alice"
+    },
+    {
+      "stream": 1,
+      "src": 52643,
+      "dst": 8888,
+      "frame": 26,
+      "text": "JOIN|Bob"
+    },
+    {
+      "stream": 2,
+      "src": 64654,
+      "dst": 8888,
+      "frame": 61,
+      "text": "JOIN|Charlie"
+    },
+    {
+      "stream": 3,
+      "src": 59815,
+      "dst": 8888,
+      "frame": 299,
+      "text": "JOIN|Charlie"
+    }
+  ],
+  "quits": [
+    {
+      "stream": 2,
+      "src": 64654,
+      "dst": 8888,
+      "frame": 268,
+      "text": "QUIT"
+    },
+    {
+      "stream": 3,
+      "src": 59815,
+      "dst": 8888,
+      "frame": 348,
+      "text": "QUIT"
+    }
+  ],
+  "sha256": "86cbc6b39a09eb6c607ab952f6127aefe792ab9d4a9feaef0e82c729dc5bc1e7",
+  "delivery_check": {
+    "requests": 6,
+    "expected": 17,
+    "actual": 17,
+    "missing": 0,
+    "extra": 0
+  },
+  "interface_statistics": [
+    {
+      "interface": 0,
+      "ifrecv": 375,
+      "ifdrop": 0
+    }
+  ]
+}

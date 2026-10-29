@@ -1,0 +1,7 @@
+bool send_frame(socket_handle sock, std::string_view text) {
+    if (text.size() > MAX_FRAME || text.find('\r') != std::string_view::npos ||
+        text.find('\n') != std::string_view::npos) return false;
+    std::string packet(text);
+    packet += '\n';
+    return send_all(sock, packet);
+}

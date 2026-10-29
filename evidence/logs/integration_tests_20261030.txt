@@ -1,0 +1,31 @@
+PASS: protocol unit tests
+
+[PASS] T01 Alice TCP connection and JOIN/WELCOME
+[PASS] T02 Bob online concurrently
+[PASS] T03 Charlie online concurrently
+[PASS] T04 duplicate nickname rejected
+[PASS] T05 illegal nickname rejected
+[PASS] T06 chat before login rejected
+[PASS] T07 UTF-8, timestamp, | in body, three-way broadcast
+[PASS] T08 fragmented TCP sends / UTF-8 recombination
+[PASS] T09 coalesced TCP sends correctly separated
+[PASS] T10 WHO online user list
+[PASS] T11 erroneous sequence rejected
+[PASS] T12 recovery after bad sequence
+[PASS] T13 legal 4096-byte message fully delivered
+[PASS] T14 illegal 4097-byte message rejected
+[PASS] T15 QUIT and response
+[PASS] T16 fresh sessions for concurrent load
+[PASS] T17 three senders each submitted 100 messages
+[DELIVERY] expected=300 received=300 missing=0 duplicate=0 invalid=0
+[DELIVERY] expected=300 received=300 missing=0 duplicate=0 invalid=0
+[DELIVERY] expected=300 received=300 missing=0 duplicate=0 invalid=0
+[COUNT] expected=300 each, LoadA=300 LoadB=300 LoadC=300
+[PASS] T18 900 total deliveries checked without missing sequences
+[PASS] T19 three users ready for private and group chat
+[PASS] T20 private message delivered to sender and target
+[PASS] T21 group create, member selection and list
+[PASS] T22 group message delivered to selected members
+[PASS] T23 selected member received group message
+[PASS] T24 group leave and message sequence check
+TOTAL PASS=24 FAIL=0

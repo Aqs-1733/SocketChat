@@ -1,0 +1,2 @@
+bin\server.exe 8888
+bin\client.exe 127.0.0.1 8888 Alice

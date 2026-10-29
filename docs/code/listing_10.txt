@@ -1,0 +1,26 @@
+    sockaddr_in address{};
+    address.sin_family = AF_INET;
+    address.sin_port = htons(port);
+    if (inet_pton(AF_INET, ip.c_str(), &address.sin_addr) != 1) {
+        append_activity(L"[错误] 服务器地址填写 IPv4 地址。");
+        return;
+    }
+
+    SOCKET connection = ::socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (connection == INVALID_SOCKET) {
+        append_activity(L"[错误] socket() 创建失败。");
+        return;
+    }
+
+    if (::connect(connection, reinterpret_cast<sockaddr*>(&address),
+                  sizeof(address)) == SOCKET_ERROR) {
+        append_activity(L"[错误] connect() 失败，请检查服务端和端口。");
+        closesocket(connection);
+        return;
+    }
+
+    if (!chat::send_frame(connection, "JOIN|" + user)) {
+        append_activity(L"[错误] JOIN 帧发送失败。");
+        closesocket(connection);
+        return;
+    }

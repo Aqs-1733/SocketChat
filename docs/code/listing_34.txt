@@ -1,0 +1,6 @@
+    const std::string half = "TEXT|2|中文拆包测试\n";
+    bool frag = true;
+    for (char ch : half) frag = frag && chat::send_all(a.sock, std::string(1, ch));
+    check(frag && get_msg(a, "Alice", "2", "中文拆包测试") &&
+          get_msg(b, "Alice", "2", "中文拆包测试") &&
+          get_msg(c, "Alice", "2", "中文拆包测试"), "T08 fragmented TCP sends / UTF-8 recombination");

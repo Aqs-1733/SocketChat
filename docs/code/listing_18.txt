@@ -1,0 +1,22 @@
+void handle_text(const SessionPtr& session, const std::string& line) {
+    const auto fields = chat::split_fields(line, 2);
+    if (fields.size() != 3) {
+        reply_error(session, "BAD_FORMAT", "Use TEXT|seq|content");
+        return;
+    }
+
+    std::uint64_t sequence = 0;
+    if (!accept_next_sequence(session, fields[1], sequence)) {
+        return;
+    }
+    ++session->next_seq;
+    if (!chat::is_valid_body(fields[2])) {
+        reply_error(session, fields[2].size() > chat::MAX_BODY ? "TOO_LONG" : "BAD_TEXT",
+                    "Content must be valid UTF-8 and at most 4096 bytes");
+        return;
+    }
+
+    const std::string stamp = chat::local_timestamp();
+    broadcast("MSG|" + stamp + "|" + session->name + "|" + fields[1] + "|" + fields[2]);
+    log_line("MSG user=" + session->name + " seq=" + fields[1]);
+}

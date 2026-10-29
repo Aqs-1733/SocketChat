@@ -1,0 +1,8 @@
+ALPHA = %x41-5A / %x61-7A
+DIGIT = %x30-39
+NAME  = 1*16(ALPHA / DIGIT / "_")
+SEQ   = 1*20DIGIT
+SEP   = %x7C
+LF    = %x0A
+CR    = %x0D
+END   = LF / CR LF

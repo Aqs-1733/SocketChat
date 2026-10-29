@@ -1,0 +1,8 @@
+gui_client.cpp
+..\src\gui_client.cpp(551): error C2664: “HCURSOR LoadCursorW(HINSTANCE,LPCWSTR)”: 无法将参数 2 从“LPSTR”转换为“LPCWSTR”
+..\src\gui_client.cpp(551): note: 指向的类型不相关; 转换需要 reinterpret_cast、C 样式强制转换或带圆括号的函数样式强制转换
+C:\Program Files (x86)\Windows Kits\10\\include\10.0.26100.0\\um\winuser.h(10620): note: 参见“LoadCursorW”的声明
+..\src\gui_client.cpp(551): note: 尝试匹配参数列表“(nullptr, LPSTR)”时
+protocol.cpp
+正在生成代码...
+[GUI_BUILD_EXIT_CODE] 1

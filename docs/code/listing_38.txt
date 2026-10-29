@@ -1,0 +1,4 @@
+[DELIVERY] expected=300 received=300 missing=0 duplicate=0 invalid=0
+[DELIVERY] expected=300 received=300 missing=0 duplicate=0 invalid=0
+[DELIVERY] expected=300 received=300 missing=0 duplicate=0 invalid=0
+[COUNT] expected=300 each, LoadA=300 LoadB=300 LoadC=300

@@ -1,0 +1,15 @@
+bool extract_frames(std::string& pending, const char* data, std::size_t size,
+                    std::vector<std::string>& frames) {
+    if (size && !data) return false;
+    pending.append(data, size);
+    while (true) {
+        const std::size_t pos = pending.find('\n');
+        if (pos == std::string::npos) break;
+        std::size_t end = pos;
+        if (end && pending[end - 1] == '\r') --end;
+        if (end > MAX_FRAME) return false;
+        frames.emplace_back(pending.substr(0, end));
+        pending.erase(0, pos + 1);
+    }
+    return pending.size() <= MAX_FRAME;
+}
