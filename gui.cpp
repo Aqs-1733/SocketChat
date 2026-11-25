@@ -5,6 +5,7 @@
 #include <commctrl.h>
 #include <commdlg.h>
 #include <filesystem>
+#include <fstream>
 #include <string>
 #include <algorithm>
 #include <stdexcept>
@@ -18,9 +19,9 @@
 
 using namespace std;
 namespace fs = std::filesystem;
-enum { OPEN_FILE=101, SAVE_FILE, START, STOP, CLEAR };
-HWND mainWnd, input, output, winBox, lossBox, delayBox, timeoutBox, portBox;
-HWND startBtn, stopBtn, logBox, progress, statusBox, speedBox, timeBox, retryBox, rttBox, windowBox;
+enum { OPEN_FILE=101, SAVE_FILE, START, STOP, CLEAR, SAVE_LOG };
+HWND mainWnd, input, output, winBox, lossBox, delayBox, timeoutBox, portBox, corruptBox;
+HWND startBtn, stopBtn, logBox, progress, statusBox, speedBox, timeBox, retryBox, rttBox, windowBox, recvWindowBox;
 HFONT normalFont, titleFont, valueFont, logFont;
 HBRUSH background, headerBrush, whiteBrush;
 const COLORREF navy=RGB(24,42,63), blue=RGB(25,112,189);
@@ -28,10 +29,13 @@ struct Child {
     HANDLE process=nullptr, pipe=nullptr;
     wstring name;
     string rest;
-    DWORD code=STILL_ACTIVE;
+    DWORD code=STILL_ACTIVE, pid=0;
 };
 Child children[3];
-bool running=false, senderOk=false, receiverOk=false;
+bool running=false, senderOk=false, receiverOk=false, tempCreated=false;
+fs::path logPath, outputPath;
+ofstream fullLog;
+unsigned long long dropped=0, corrupted=0;
 unsigned long long total=0, base=0, retries=0;
 int windowSize=16;
 
@@ -109,7 +113,16 @@ void onLine(int i,const string& s) {
             set(timeBox,widen(field(s,"time=")));
         }
     }
-    if(i==0 && s.find("[SUCCESS]")==0) receiverOk=true;
+    if(i==0) {
+        if(s.find("[TEMP]")==0) tempCreated=true;
+        if(s.find("[SUCCESS]")==0) receiverOk=true;
+        if(s.find("[RECV_WINDOW]")==0)
+            set(recvWindowBox,L"接收窗口  ["+widen(field(s,"base="))+L", "+widen(field(s,"end="))+L")   乱序缓存 "+widen(field(s,"buffered=")));
+    }
+    if(i==1) {
+        if(s.find("[DROP]")==0) ++dropped;
+        if(s.find("[CORRUPT]")==0) ++corrupted;
+    }
 }
 //通过匿名管道读取三个进程的日志
 void drain(int i) {
@@ -126,10 +139,15 @@ void drain(int i) {
             string line=c.rest.substr(0,end);
             c.rest.erase(0,end+1);
             if(!line.empty() && line.back()=='\r') line.pop_back();
+            if(fullLog.is_open()) {
+                const char* role[]={"RECV","ROUTE","SEND"};
+                fullLog << '[' << role[i] << "] " << line << '\n';
+            }
             onLine(i,line);
             batch+=L"["+c.name+L"] "+widen(line)+L"\r\n";
         }
     }
+    if(fullLog.is_open()) fullLog.flush();
     if(!batch.empty()) append(batch);
 }
 void closeChild(Child& c) {
@@ -143,13 +161,48 @@ void closeChild(Child& c) {
     if(c.pipe) CloseHandle(c.pipe);
     c=Child{};
 }
+void lockParams(bool lock) {
+    HWND fields[]={input,output,winBox,lossBox,delayBox,timeoutBox,portBox,corruptBox,
+                   GetDlgItem(mainWnd,OPEN_FILE),GetDlgItem(mainWnd,SAVE_FILE)};
+    for(HWND h:fields) EnableWindow(h,!lock);
+}
 void finish(const wchar_t* message) {
-    for(auto& c:children) closeChild(c);
+    DWORD receiverPid=children[0].pid;
+    //先停止进程，再读取剩余日志
+    for(int i=0;i<3;++i) {
+        auto& c=children[i];
+        if(c.process && WaitForSingleObject(c.process,0)==WAIT_TIMEOUT) {
+            TerminateProcess(c.process,2);
+            WaitForSingleObject(c.process,2000);
+        }
+        drain(i);
+        while(c.pipe) {
+            DWORD available=0;
+            if(!PeekNamedPipe(c.pipe,nullptr,0,nullptr,&available,nullptr)||!available) break;
+            drain(i);
+        }
+        closeChild(c);
+    }
+    if(tempCreated && receiverPid) {
+        auto part=outputPath;
+        part+=L".part."+to_wstring(receiverPid);
+        error_code ec;
+        fs::remove(part,ec);
+        if(ec) append(L"[系统] 临时文件清理失败，请检查接收目录。\r\n");
+    }
     running=false;
     set(statusBox,message);
     append(wstring(L"[系统] ")+message+L"\r\n");
+    if(fullLog.is_open()) {
+        fullLog << "[GUI] sender_verified=" << senderOk << " receiver_verified=" << receiverOk
+                << " dropped=" << dropped << " corrupted=" << corrupted << '\n';
+        fullLog.close();
+        if(fullLog.fail()) append(L"[系统] 日志写入失败。\r\n");
+        else append(L"[系统] 完整日志："+logPath.wstring()+L"\r\n");
+    }
     EnableWindow(startBtn,TRUE);
     EnableWindow(stopBtn,FALSE);
+    lockParams(false);
 }
 wstring quote(const wstring& s) {
     //文件路径以引号包围，末尾反斜杠需转义
@@ -164,7 +217,7 @@ void launch(int i,const wstring& name,const wstring& args) {
     wstring exe=(fs::path(path).parent_path()/L"reliable_udp.exe").wstring();
     SECURITY_ATTRIBUTES sa{sizeof(sa),nullptr,TRUE};
     HANDLE read=nullptr,write=nullptr;
-    if(!CreatePipe(&read,&write,&sa,0)) throw runtime_error("CreatePipe failed");
+    if(!CreatePipe(&read,&write,&sa,65536)) throw runtime_error("CreatePipe failed");
     if(!SetHandleInformation(read,HANDLE_FLAG_INHERIT,0)) {
         CloseHandle(read); CloseHandle(write); throw runtime_error("pipe setup failed");
     }
@@ -180,7 +233,7 @@ void launch(int i,const wstring& name,const wstring& args) {
     CloseHandle(write); CloseHandle(nullIn);
     if(!ok) { CloseHandle(read); throw runtime_error("cannot start reliable_udp.exe; run build.bat first"); }
     CloseHandle(pi.hThread);
-    children[i].process=pi.hProcess; children[i].pipe=read; children[i].name=name;
+    children[i].process=pi.hProcess; children[i].pipe=read; children[i].name=name; children[i].pid=pi.dwProcessId;
 }
 int number(HWND h,int lo,int hi) {
     wstring s=text(h);
@@ -195,20 +248,33 @@ void start() {
         fs::path src(text(input)),dst(text(output));
         if(src.empty()||!fs::is_regular_file(src)||dst.empty()||fs::is_directory(dst)) throw runtime_error("choose valid source and output files");
         if(fs::exists(dst)&&fs::equivalent(src,dst)) throw runtime_error("source and output must differ");
-        int w=number(winBox,1,4096),loss=number(lossBox,0,99),delay=number(delayBox,0,10000);
+        int w=number(winBox,1,4096),loss=number(lossBox,0,99),delay=number(delayBox,0,10000),corrupt=number(corruptBox,0,99);
         int timeout=number(timeoutBox,100,60000),port=number(portBox,1024,65534);
-        if(timeout<=2*delay && MessageBoxW(mainWnd,L"重传超时不大于模拟往返时延，可能产生大量重传。继续？",L"参数提醒",MB_YESNO|MB_ICONWARNING)!=IDYES) return;
+        if(timeout<=2*delay+20) {
+            timeout=2*delay+100;
+            set(timeoutBox,to_wstring(timeout));
+            MessageBoxW(mainWnd,L"重传超时已调整为往返时延加100ms，避免无效重传。",L"参数提醒",MB_OK|MB_ICONINFORMATION);
+        }
         if(fs::exists(dst)&&MessageBoxW(mainWnd,L"接收文件已存在，是否覆盖？",L"确认",MB_YESNO|MB_ICONQUESTION)!=IDYES) return;
         set(logBox,L""); set(speedBox,L"--"); set(timeBox,L"--"); set(retryBox,L"--"); set(rttBox,L"--");
-        total=base=retries=0; windowSize=w; senderOk=receiverOk=false;
+        total=base=retries=dropped=corrupted=0; windowSize=w;
+        senderOk=receiverOk=tempCreated=false;
+        outputPath=fs::absolute(dst);
+        logPath=outputPath.parent_path()/(L"transfer_"+to_wstring(GetCurrentProcessId())+L"_"+to_wstring(GetTickCount64())+L".log");
+        fullLog.clear();
+        fullLog.open(logPath,ios::binary|ios::out|ios::trunc);
+        if(!fullLog) throw runtime_error("cannot create experiment log");
+        fullLog << "[PARAM] window=" << w << " loss=" << loss << "% delay=" << delay
+                << "ms corrupt=" << corrupt << "% timeout=" << timeout << "ms\n";
         SendMessageW(progress,PBM_SETPOS,0,0);
-        set(windowBox,L"等待连接"); set(statusBox,L"正在建立连接...");
+        set(windowBox,L"发送窗口：等待连接"); set(recvWindowBox,L"接收窗口：等待连接"); set(statusBox,L"正在建立连接...");
         wstring p=to_wstring(port),r=to_wstring(port+1),sw=to_wstring(w),t=to_wstring(timeout);
         //接收端、路由器、发送端依次启动，双方窗口使用相同大小
         launch(0,L"接收",L"recv "+quote(dst.wstring())+L" "+r+L" "+sw+L" "+t);
-        launch(1,L"路由",L"route "+p+L" 127.0.0.1 "+r+L" "+to_wstring(loss)+L" "+to_wstring(delay));
+        launch(1,L"路由",L"route "+p+L" 127.0.0.1 "+r+L" "+to_wstring(loss)+L" "+to_wstring(delay)+L" "+to_wstring(corrupt));
         launch(2,L"发送",L"send "+quote(src.wstring())+L" 127.0.0.1 "+p+L" "+sw+L" "+t);
         running=true;
+        lockParams(true);
         EnableWindow(startBtn,FALSE); EnableWindow(stopBtn,TRUE);
     } catch(const exception& e) {
         finish(L"启动失败");
@@ -223,13 +289,14 @@ void poll() {
         if(WaitForSingleObject(c.process,0)==WAIT_OBJECT_0) {
             GetExitCodeProcess(c.process,&c.code);
             if(c.code!=0 || i==1) { finish(L"传输失败 · 请检查日志"); return; }
+            drain(i);
         }
     }
-    if(senderOk && receiverOk && children[2].code==0) {
+    if(senderOk && receiverOk && children[2].code==0 && children[0].code==0) {
         SendMessageW(progress,PBM_SETPOS,1000,0);
-        //发送端确认FIN_ACK后，本地演示可结束接收端的等待期
-        finish(L"传输完成 · 文件校验通过");
-    } else if(children[0].code==0 && !senderOk) finish(L"连接关闭失败 · 未收到最终确认");
+        finish((L"传输完成 · 校验通过 · 丢包 "+to_wstring(dropped)+L" · 误码 "+to_wstring(corrupted)).c_str());
+    } else if(senderOk && receiverOk) set(statusBox,L"文件校验通过 · 等待连接关闭");
+    else if(children[2].code==0 && !senderOk) finish(L"发送端异常结束");
 }
 void choose(bool save) {
     wchar_t path[32768]{};
@@ -244,6 +311,22 @@ void choose(bool save) {
         }
     }
 }
+void saveLog() {
+    if(running || logPath.empty()) {
+        MessageBoxW(mainWnd,L"请完成本次传输后保存日志。",L"日志",MB_OK|MB_ICONINFORMATION);
+        return;
+    }
+    wchar_t path[32768]=L"transfer.log";
+    OPENFILENAMEW of{}; of.lStructSize=sizeof(of); of.hwndOwner=mainWnd;
+    of.lpstrFile=path; of.nMaxFile=32768; of.lpstrFilter=L"日志文件\0*.log\0所有文件\0*.*\0\0";
+    of.lpstrDefExt=L"log"; of.Flags=OFN_PATHMUSTEXIST|OFN_OVERWRITEPROMPT|OFN_NOCHANGEDIR;
+    if(GetSaveFileNameW(&of)) {
+        try {
+            if(!fs::exists(path)||!fs::equivalent(logPath,path)) fs::copy_file(logPath,path,fs::copy_options::overwrite_existing);
+            append(L"[系统] 日志已保存。\r\n");
+        } catch(const exception&) { MessageBoxW(mainWnd,L"无法保存日志。",L"错误",MB_OK|MB_ICONERROR); }
+    }
+}
 void setup() {
     normalFont=font(15,FW_NORMAL); titleFont=font(26,FW_BOLD); valueFont=font(23,FW_SEMIBOLD); logFont=font(14,FW_NORMAL,L"Consolas");
     HWND h=label(L"可靠传输协议  /  Reliable UDP",26,18,800,36);
@@ -253,27 +336,29 @@ void setup() {
     label(L"发送文件",26,142,84); input=edit(L"",116,137,650); button(L"浏览...",780,136,100,OPEN_FILE);
     label(L"接收文件",26,181,84); output=edit(L"",116,176,650); button(L"另存为...",780,175,100,SAVE_FILE);
     label(L"02   网络参数",26,220,180);
-    label(L"窗口大小 / 包",26,252,150); winBox=edit(L"16",26,276,144,true);
-    label(L"丢包率 / %",190,252,150); lossBox=edit(L"10",190,276,144,true);
-    label(L"单向时延 / ms",354,252,150); delayBox=edit(L"40",354,276,144,true);
-    label(L"重传超时 / ms",518,252,150); timeoutBox=edit(L"800",518,276,144,true);
-    label(L"路由端口",682,252,150); portBox=edit(L"9000",682,276,198,true);
+    label(L"窗口大小 / 包",26,252,130); winBox=edit(L"16",26,276,128,true);
+    label(L"丢包率 / %",170,252,130); lossBox=edit(L"10",170,276,128,true);
+    label(L"单向时延 / ms",314,252,130); delayBox=edit(L"40",314,276,128,true);
+    label(L"报文误码 / %",458,252,130); corruptBox=edit(L"0",458,276,128,true);
+    label(L"重传超时 / ms",602,252,130); timeoutBox=edit(L"800",602,276,128,true);
+    label(L"路由端口",746,252,130); portBox=edit(L"9000",746,276,134,true);
     startBtn=button(L"开始传输",26,320,160,START); stopBtn=button(L"停止",198,320,90,STOP); EnableWindow(stopBtn,FALSE);
     statusBox=label(L"等待开始",310,325,570,26);
     progress=control(PROGRESS_CLASSW,L"",PBS_SMOOTH,26,365,854,13); SendMessageW(progress,PBM_SETRANGE32,0,1000);
-    windowBox=label(L"发送窗口  [0, 0)",26,387,854);
+    windowBox=label(L"发送窗口  [0, 0)",26,385,854);
+    recvWindowBox=label(L"接收窗口  [0, 0)",26,407,854);
     const wchar_t* titles[]={L"平均吞吐率",L"传输耗时",L"数据重传次数",L"RTT（结束后取平均）"};
     HWND* values[]={&speedBox,&timeBox,&retryBox,&rttBox};
     for(int i=0;i<4;++i) {
         int x=26+i*215;
-        label(titles[i],x+12,428,192); *values[i]=label(L"--",x+12,451,192,36);
+        label(titles[i],x+12,448,192); *values[i]=label(L"--",x+12,471,192,36);
         SendMessageW(*values[i],WM_SETFONT,(WPARAM)valueFont,TRUE);
     }
-    label(L"03   实时协议日志",26,513,300); button(L"清空日志",780,505,100,CLEAR);
-    logBox=control(L"EDIT",L"[系统] 请选择文件并设置网络参数。\r\n",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_TABSTOP,26,545,854,182,0,WS_EX_CLIENTEDGE);
+    label(L"03   实时协议日志",26,533,300); button(L"保存日志",666,525,100,SAVE_LOG); button(L"清空日志",780,525,100,CLEAR);
+    logBox=control(L"EDIT",L"[系统] 请选择文件并设置网络参数。\r\n",ES_MULTILINE|ES_READONLY|ES_AUTOVSCROLL|WS_VSCROLL|WS_TABSTOP,26,565,854,162,0,WS_EX_CLIENTEDGE);
     SendMessageW(logBox,WM_SETFONT,(WPARAM)logFont,TRUE);
     SendMessageW(logBox,EM_SETLIMITTEXT,500000,0);
-    SetTimer(mainWnd,1,50,nullptr);
+    SetTimer(mainWnd,1,25,nullptr);
 }
 LRESULT CALLBACK proc(HWND h,UINT msg,WPARAM wp,LPARAM lp) {
     switch(msg) {
@@ -283,15 +368,16 @@ LRESULT CALLBACK proc(HWND h,UINT msg,WPARAM wp,LPARAM lp) {
         case OPEN_FILE: if(!running) choose(false); break;
         case SAVE_FILE: if(!running) choose(true); break;
         case START: start(); break;
-        case STOP: if(running) finish(L"已停止 · 接收文件可能不完整"); break;
+        case STOP: if(running) finish(L"已停止 · 未完成文件不会替换目标文件"); break;
         case CLEAR: set(logBox,L""); break;
+        case SAVE_LOG: saveLog(); break;
         }
         return 0;
     case WM_TIMER: poll(); return 0;
     case WM_PAINT: {
         PAINTSTRUCT ps; HDC dc=BeginPaint(h,&ps);
         RECT top{0,0,906,88}; FillRect(dc,&top,headerBrush);
-        for(int i=0;i<4;++i) { RECT card{26+i*215,416,230+i*215,495}; FillRect(dc,&card,whiteBrush); }
+        for(int i=0;i<4;++i) { RECT card{26+i*215,436,230+i*215,515}; FillRect(dc,&card,whiteBrush); }
         EndPaint(h,&ps); return 0;
     }
     case WM_CTLCOLORSTATIC: {
@@ -299,7 +385,7 @@ LRESULT CALLBACK proc(HWND h,UINT msg,WPARAM wp,LPARAM lp) {
         if(r.top<88) { SetTextColor(dc,RGB(255,255,255)); SetBkColor(dc,navy); return (LRESULT)headerBrush; }
         if(c==logBox) { SetTextColor(dc,navy); SetBkColor(dc,RGB(255,255,255)); return (LRESULT)whiteBrush; }
         SetTextColor(dc,(c==statusBox||c==speedBox||c==timeBox||c==retryBox||c==rttBox)?blue:navy);
-        if(r.top>=416&&r.top<495) { SetBkColor(dc,RGB(255,255,255)); return (LRESULT)whiteBrush; }
+        if(r.top>=436&&r.top<515) { SetBkColor(dc,RGB(255,255,255)); return (LRESULT)whiteBrush; }
         SetBkColor(dc,RGB(239,244,249)); return (LRESULT)background;
     }
     case WM_CLOSE: if(running) finish(L"已停止"); DestroyWindow(h); return 0;
