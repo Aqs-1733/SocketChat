@@ -1,0 +1,697 @@
+\documentclass[UTF8,a4paper,11pt,scheme=chinese]{ctexart}
+\usepackage[top=2.30cm,bottom=2.35cm,left=2.55cm,right=2.45cm,headheight=15pt]{geometry}
+\usepackage{fontspec,amsmath,amssymb,graphicx,booktabs,tabularx,array,longtable,multirow}
+\usepackage{float,caption,subcaption,enumitem,fancyhdr,lastpage,hyperref,xcolor,tikz,listings,needspace,chngcntr}
+\usetikzlibrary{arrows.meta,positioning,shapes.geometric,calc}
+\setCJKmainfont{Noto Serif CJK SC}
+\setCJKsansfont{Noto Sans CJK SC}
+\setCJKmonofont{Noto Sans Mono CJK SC}
+\setmainfont{Liberation Serif}
+\setsansfont{Liberation Sans}
+\setmonofont{DejaVu Sans Mono}[Scale=0.79]
+\ctexset{section={name={,、},number={\chinese{section}},format=\heiti\zihao{3},beforeskip=1.45em,afterskip=.75em},
+ subsection={name={（,）},number={\chinese{subsection}},format=\heiti\zihao{4},beforeskip=1.05em,afterskip=.55em},
+ subsubsection={format=\bfseries,beforeskip=.8em,afterskip=.35em}}
+\linespread{1.26}
+\setlength{\parindent}{2em}
+\setlength{\parskip}{0pt}
+\setlist[enumerate]{itemsep=0.1em,topsep=0.25em,leftmargin=2.5em}
+\captionsetup{font={small},labelfont=bf,labelsep=quad,skip=5pt}
+\counterwithin{figure}{subsection}
+\counterwithin{table}{subsection}
+\renewcommand{\thefigure}{\arabic{section}.\arabic{subsection}.\arabic{figure}}
+\renewcommand{\thetable}{\arabic{section}.\arabic{subsection}.\arabic{table}}
+\renewcommand{\figurename}{图}
+\renewcommand{\tablename}{表}
+\pagestyle{fancy}
+\fancyhf{}
+\fancyhead[L]{\small 编程实验二：以太网数据包捕获}
+\fancyhead[R]{\small 计算机网络实验报告}
+\fancyfoot[C]{\small\thepage}
+\renewcommand{\headrulewidth}{0.35pt}
+\renewcommand{\footrulewidth}{0pt}
+\hypersetup{hidelinks,pdfborder={0 0 0},pdfauthor={王麒萱},pdftitle={计算机网络编程实验二：编写数据包捕获程序并分析捕获数据包},pdfsubject={C++17 Npcap Ethernet capture experiment}}
+\graphicspath{{figures/}}
+\lstdefinestyle{cpp}{language=C++,basicstyle=\ttfamily\footnotesize,keywordstyle=\bfseries,commentstyle=\itshape\color{black!55},stringstyle=\color{black},numbers=left,numberstyle=\tiny\color{black!50},numbersep=8pt,stepnumber=1,frame=none,breaklines=true,breakatwhitespace=false,showstringspaces=false,keepspaces=true,tabsize=4,aboveskip=5pt,belowskip=7pt,columns=fullflexible}
+\lstset{style=cpp}
+\newcommand{\code}[1]{\texttt{#1}}
+
+% 所有图片均在解释性正文之后放置。
+\newcommand{\pic}[2]{%
+  \begin{figure}[H]\centering
+  \includegraphics[width=.96\linewidth,height=.295\textheight,keepaspectratio]{#1}
+  \caption{#2}\end{figure}}
+\newcommand{\tallpic}[2]{%
+  \begin{figure}[H]\centering
+  \includegraphics[width=.96\linewidth,height=.37\textheight,keepaspectratio]{#1}
+  \caption{#2}\end{figure}}
+\newcommand{\duopic}[5]{%
+  \begin{figure}[H]\centering
+  \begin{subfigure}[t]{.488\linewidth}\centering
+  \includegraphics[width=\linewidth,height=.255\textheight,keepaspectratio]{#1}
+  \caption{#2}\end{subfigure}\hfill
+  \begin{subfigure}[t]{.488\linewidth}\centering
+  \includegraphics[width=\linewidth,height=.255\textheight,keepaspectratio]{#3}
+  \caption{#4}\end{subfigure}
+  \caption{#5}\end{figure}}
+\newcommand{\enhex}[1]{\texttt{#1}}
+\begin{document}
+\begin{titlepage}
+\thispagestyle{empty}
+\centering
+\vspace*{2.2cm}
+\includegraphics[width=8.3cm]{nankai_logo.png}\par
+\vspace{1.20cm}
+{\zihao{3}\heiti 计算机网络编程实验报告\par}
+\vspace{0.82cm}
+{\zihao{2}\heiti 编写数据包捕获程序并分析捕获数据包\par}
+\vspace{2.1cm}
+{\zihao{-4}\begin{tabular}{rl}姓名：&王麒萱\\[8pt]学号：&2412096\\[8pt]班级：&信息安全班\end{tabular}\par}
+\vfill
+{\zihao{-4}2026 年 11 月 5 日\par}
+\vspace{1.35cm}
+\end{titlepage}
+\pagenumbering{Roman}
+\setcounter{page}{1}
+\thispagestyle{plain}
+\begin{center}{\heiti\large 摘要}\end{center}
+本实验使用 C++17 和 Npcap 编写以太网数据包捕获程序，通过 Npcap 接口获取本机网卡列表，打开指定网卡捕获原始数据帧，并按以太网帧格式解析源 MAC 地址、目的 MAC 地址、类型／长度字段及其后的第一个字节，同时记录捕获时间和帧长度；采用命令行和 Win32 图形界面两种操作方式，在屏幕上显示数据帧及其字段信息，并设置 BPF 过滤、按帧数或时间停止捕获、手动停止和文本日志保存功能；使用本机 WLAN 捕获 IPv4、ICMP 和 ARP 流量，通过 Wireshark 查看以太网首部的原始字节并对照程序输出，分别测试网卡枚举、数据帧解析、过滤条件、停止控制、日志记录、界面操作及异常输入，再使用 C++ 测试程序测试帧解析函数，运行结果显示，程序能够捕获以太网数据帧并输出指定字段。
+
+\noindent\textbf{关键词：}Npcap；C++17；以太网帧；MAC 地址；BPF；数据包捕获
+\vspace{1em}
+\tableofcontents
+\clearpage
+\pagenumbering{arabic}
+\setcounter{page}{1}
+
+\section{实验要求}
+本实验要求在 Windows 上使用 Npcap 捕获本机网络数据帧，解析以太网首部的指定字段，并在屏幕上显示，具体要求如下。
+\begin{enumerate}[label=\arabic*）]
+\item 了解 Npcap 的基本架构及数据包捕获过程。
+\item 学习通过 Npcap 获取网卡设备列表、打开网卡设备和捕获数据包的方法。
+\item 编写程序获取本机数据包，显示源 MAC 地址、目的 MAC 地址、类型／长度字段的值，以及类型／长度字段之后第一个字节的值。
+\item 以清楚、易读的形式在屏幕上显示捕获结果，数据包本身无需保存到硬盘。
+\item 程序结构清晰，具有可读性；完成实验报告，并提交源码和可执行文件。
+\item 现场运行程序，讲解主要源码、捕获流程和协议字段。
+\end{enumerate}
+
+\section{实验环境}
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{3.1cm} X}\toprule
+项目&配置\\\midrule
+操作系统&Windows 11 64 位，版本 10.0.26200.9711\\
+编程语言&C++17\\
+开发工具&VS Code，MSVC 编译器\\
+编译参数&\code{/std:c++17}、\code{/W4}、\code{/utf-8}、\code{/EHsc}\\
+抓包环境&Npcap 1.83，基于 libpcap 1.10.5；Npcap SDK\\
+图形界面&Win32 API，Windows Common Controls\\
+网络设备&Intel(R) Wi-Fi 6E AX211 160MHz\\
+WLAN 配置&IPv4 地址 10.130.125.19；掩码 255.255.128.0；网关 10.130.0.1\\
+辅助工具&Windows CMD、Ping、Wireshark\\
+工程目录&\path{D:\Study\NetworkLab2}\\\bottomrule
+\end{tabularx}
+\caption{实验环境}\end{table}
+
+\section{实验原理}
+\subsection{Npcap 捕获机制}
+Npcap 由内核中的 NPF 驱动和用户态抓包接口组成，NPF 驱动从网络接口取得数据包，按照设置的 BPF 规则筛选报文，再将捕获记录交给应用程序；应用程序通过兼容 libpcap 的接口获取数据，并为每个打开的网卡保存对应的抓包句柄。
+
+首先调用 \code{pcap\_findalldevs} 获取网卡列表，再使用 \code{pcap\_open\_live} 打开选中的设备；在捕获循环中调用 \code{pcap\_next\_ex}，在返回值为 1 时取得 \code{pcap\_pkthdr} 和原始字节指针，使用 \code{ts}、\code{caplen}、\code{len} 分别记录捕获时间、实际捕获字节数和原始帧长度，并按 \code{caplen} 判断可访问的字节范围。
+
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=6mm,every node/.style={font=\small},b/.style={draw,minimum height=7mm,text width=9.4cm,align=center},a/.style={-{Latex[length=2mm]},thick}]
+\node[b](n1){网卡接收或发送网络数据};
+\node[b,below=of n1](n2){Npcap 驱动获取数据包，应用 BPF 过滤条件};
+\node[b,below=of n2](n3){用户态程序通过 Npcap 接口获取时间、长度和数据字节};
+\node[b,below=of n3](n4){按照以太网帧格式解析字段};
+\node[b,below=of n4](n5){命令行输出／Win32 列表显示};
+\foreach \u/\v in {n1/n2,n2/n3,n3/n4,n4/n5}{\draw[a](\u)--(\v);}
+\end{tikzpicture}
+\caption{Npcap 的数据包捕获过程}\end{figure}
+
+程序获取原始帧字节，首先确定网卡的链路类型，本实验使用 \code{DLT\_EN10MB} 对应的以太网帧格式，然后按规定的字节偏移解析以太网首部，再根据首部后的数据分析 IPv4、ARP 等上层协议。
+
+\subsection{以太网帧结构}
+以太网 II 帧的首部包含 6 字节目的 MAC、6 字节源 MAC 和 2 字节类型字段，共 14 字节，每个 MAC 地址占 6 字节；显示时将每个字节转换成两位十六进制数，类型字段采用网络字节序，先存储高字节。
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{c c X}\toprule
+字节偏移&字段长度&字段含义\\\midrule
+0～5&6 字节&目的 MAC 地址\\
+6～11&6 字节&源 MAC 地址\\
+12～13&2 字节&类型／长度字段\\
+14 起&可变&字段之后的数据\\\bottomrule
+\end{tabularx}
+\caption{以太网首部字段位置}\end{table}
+
+设原始帧字节为 \(b_0,b_1,\ldots\)，将类型字段中的两个字节合成为一个数值：
+\[
+T=256\,b_{12}+b_{13}=(b_{12}\ll 8)\,\vert\,b_{13}.
+\]
+对于普通以太网 II 帧，从偏移 14 处获取类型字段后的第一个字节，即 \(b_{14}\)；将类型字段的两个字节 \enhex{08 00} 合成为 \(T=\texttt{0x0800}\)，表示 IPv4，再拆分其后的 \enhex{45}，其中高四位 \enhex{4} 表示 IP 版本为 4，低四位 \enhex{5} 表示首部长度为 20 字节；类型字段 \enhex{08 06} 表示 ARP，其后的 \enhex{00} 对应 ARP 硬件类型字段的高字节。
+
+\subsection{类型字段的含义}
+IEEE 802.3 帧使用第 12～13 字节表示数据长度，在字段数值位于 0～1500 范围内时，将其解释为长度，在数值大于等于 \enhex{0x0600} 时，将其解释为协议类型，下表列出常见类型及其含义。
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{c X}\toprule
+字段数值&表示的协议\\\midrule
+\enhex{0x0800}&IPv4\\
+\enhex{0x0806}&ARP\\
+\enhex{0x86DD}&IPv6\\
+\enhex{0x8100}&IEEE 802.1Q VLAN 标签\\\bottomrule
+\end{tabularx}
+\caption{常见以太网类型字段}\end{table}
+
+带 VLAN 标记的以太网帧在外层类型字段后增加 VLAN 标签，单层 802.1Q 标签包含 2 字节 TCI 和 2 字节内层类型字段，内层数据从偏移 18 处开始，双层标签的内层数据则从偏移 22 处开始；程序按各自的偏移，分别保存外层类型字段后的首字节和内层数据的首字节。
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{c c X}\toprule
+偏移&字段&说明\\\midrule
+12～13&\enhex{81 00}&外层 VLAN 类型\\
+14～15&TCI&优先级、标记位和 VLAN ID\\
+16～17&内层类型&例如 \enhex{08 00} 表示 IPv4\\
+18 起&内层数据&IPv4 数据的起始位置\\\bottomrule
+\end{tabularx}
+\caption{单层 VLAN 帧的字段位置}\end{table}
+
+\subsection{BPF 过滤原理}
+使用 BPF 表达式筛选数据包，先通过 Npcap 编译表达式，再将规则应用到捕获句柄；分别使用 \code{arp}、\code{ip} 和 \code{icmp} 筛选 ARP、IPv4 和 ICMP 报文，使用 \code{tcp or udp} 通过逻辑或运算选取 TCP 或 UDP 报文。
+
+使用 BPF 筛选报文，界面按以太网首部格式显示字段，例如，在筛选 TCP、UDP 或 ICMP 流量时，程序对封装在 IPv4 中的报文显示类型值 \enhex{0x0800}；BPF 可以筛选传输层协议，以太网类型字段则表示帧中封装的上层协议。
+
+\subsection{缓冲机制和停止条件}
+Npcap 通过缓冲区在驱动和应用程序之间传递数据，应用程序采用非阻塞方式接收数据，在暂时无数据时调用 \code{pcap\_next\_ex} 得到返回值 0，在取得数据时得到返回值 1；在 Windows 中，使用 \code{pcap\_setmintocopy} 设置最小数据交付阈值，指定缓冲区至少积累多少字节才向应用程序交付数据。
+
+使用单调时钟累计捕获时间，并在达到设定秒数时退出循环，也可以累计已捕获的帧数，并在达到指定数量时停止；通过 \code{pcap\_stats} 获取驱动接收数、驱动丢弃数和接口丢弃数，应用程序则统计实际交给解析函数的帧数，两者分别在应用层和驱动层计数。
+
+\section{程序设计}
+\subsection{总体架构}
+首先按功能划分捕获服务、以太网帧解析、数据显示、命令行入口、图形界面入口和解析测试模块，在两种入口中共用捕获及解析函数；每捕获一帧，就将时间、长度、解析状态和以太网字段保存为 \code{PacketRecord}，再交给显示模块。
+\begin{table}[H]\centering\small
+\begin{tabularx}{\linewidth}{>{\raggedright\arraybackslash}p{2.1cm} X}\toprule
+模块&主要文件及功能\\\midrule
+捕获服务&\code{capture\_service.h/.cpp}：枚举设备、打开网卡、设置 BPF、抓包、统计\\
+帧解析&\code{ethernet\_parser.h/.cpp}：解析 MAC、类型字段、首字节及 VLAN 标签\\
+命令行显示&\code{display.h/.cpp}：输出数据帧和文本日志\\
+命令行入口&\code{main.cpp}：处理参数、选择设备、Ctrl+C 中断\\
+图形界面&\code{gui\_main.cpp}：创建窗口、启动线程、显示数据帧\\
+解析测试&\path{tests/ethernet_parser_tests.cpp}：构造测试帧、比较字段及边界\\
+构建脚本&\code{build.bat}：使用 MSVC 编译程序和测试文件\\\bottomrule
+\end{tabularx}\caption{主要文件及功能}\end{table}
+
+\Needspace{.39\textheight}
+首先在 \path{D:/Study} 下建立 \code{NetworkLab2} 实验文件夹，并创建 \code{src}、\code{tests} 和 \code{bin} 子文件夹；然后在 \code{src} 中编写 \code{main.cpp}、\code{gui\_main.cpp}、\code{capture\_service.h/.cpp}、\code{ethernet\_parser.h/.cpp} 和 \code{display.h/.cpp}，在 \code{tests} 中编写解析测试代码，再添加 \code{build.bat}、\code{CMakeLists.txt} 构建文件，形成下图所示的代码架构。
+\pic{shot01.png}{实验二的工程文件}
+
+\subsection{网卡选择}
+在命令行中使用 \code{--adapter N} 按编号选择网卡，使用 \code{--device NAME} 输入完整的 Npcap 设备名称，编号以当前枚举列表为准；在图形界面的下拉框中显示网卡描述和 IPv4 地址，点击刷新按钮即可更新列表，两种入口都将选定的设备名称传给 \code{capture\_live}。
+
+\subsection{捕获流程}
+首先选择网卡，调用 \code{pcap\_open\_live} 创建抓包句柄，再获取链路类型，并按照输入的过滤条件编译 BPF 表达式，将规则设置到句柄中；然后设置非阻塞模式，进入捕获循环，每轮先判断停止标志、帧数和时长，再调用 \code{pcap\_next\_ex} 获取数据；在取得报文时保存时间和长度，调用 \code{parse\_ethernet} 解析首部，并通过回调传出记录，最后在退出循环时获取驱动计数，并通过智能指针关闭句柄。
+\begin{figure}[H]\centering
+\begin{tikzpicture}[node distance=5mm,every node/.style={font=\small},b/.style={draw,minimum height=7mm,text width=9.4cm,align=center},a/.style={-{Latex[length=2mm]},thick}]
+\node[b](a1){选择网卡，打开 Npcap 抓包句柄};
+\node[b,below=of a1](a2){设置 BPF 过滤条件和数据接收方式};
+\node[b,below=of a2](a3){判断捕获数量、时长和停止标志};
+\node[b,below=of a3](a4){接收报文，保存时间和长度};
+\node[b,below=of a4](a5){解析字段并交给界面或命令行显示};
+\node[b,below=of a5](a6){输出统计，关闭抓包句柄};
+\foreach \u/\v in {a1/a2,a2/a3,a3/a4,a4/a5,a5/a6}{\draw[a](\u)--(\v);}
+\end{tikzpicture}
+\caption{数据包捕获程序的处理流程}\end{figure}
+
+\subsection{数据结构}
+使用 \code{EthernetFrame} 保存以太网首部的解析结果，用六字节数组分别保存目的 MAC 和源 MAC，用 \code{uint16\_t} 保存类型字段，分别记录外层首字节、数据首字节及相应字段是否存在；在解析带 VLAN 标签的帧时，将标签信息保存到 \code{vlans} 中，并使用 \code{data\_offset} 记录数据起始位置。
+
+首先通过 \code{pcap\_next\_ex} 取得有效帧，再构造一条 \code{PacketRecord}，保存帧序号、时间、\code{caplen}、\code{len}、解析状态和 \code{EthernetFrame}，然后向解析函数传入 \code{caplen}，按照实际捕获长度判断各字段是否齐全。
+\begin{lstlisting}
+struct PacketRecord {
+    std::uint64_t sequence = 0;
+    std::string local_time;
+    std::uint32_t captured_length = 0;
+    std::uint32_t wire_length = 0;
+    ParseStatus status = ParseStatus::InvalidInput;
+    EthernetFrame frame;
+};
+\end{lstlisting}
+
+使用独立的 \code{CaptureStats} 结构保存统计信息，分别记录应用处理帧数、解析成功数、解析失败数，以及驱动返回的接收和丢弃计数，再在命令行的结束信息和图形界面的状态栏中显示这组数据。
+
+\subsection{界面处理}
+使用 Win32 控件，在顶部依次设置网卡下拉框、过滤条件、抓包数量、开始和停止按钮，在下方列表中逐帧显示捕获结果；在点击开始捕获时，获取控件参数，清空上一轮数据和计数，暂时禁用输入控件，再创建 \code{std::thread} 运行抓包函数。
+
+捕获线程通过回调复制每帧的 \code{PacketRecord}，再调用 \code{PostMessageW} 向窗口投递 \code{WM\_PACKET} 消息；窗口线程在收到消息时，从记录中取得捕获时间、两端 MAC、类型字段、首字节和长度，再更新列表。
+\begin{lstlisting}
+callbacks.on_packet = [window](const netlab::PacketRecord& record) {
+    app.total_received.fetch_add(1);
+    if (record.status != netlab::ParseStatus::Ok) {
+        app.total_invalid.fetch_add(1);
+    }
+    if (app.pending_events.fetch_add(1) >= MAX_PENDING_EVENTS) {
+        app.pending_events.fetch_sub(1);
+        app.skipped_on_screen.fetch_add(1);
+        return;
+    }
+    auto* item = new (std::nothrow) netlab::PacketRecord(record);
+    if (item == nullptr ||
+        !PostMessageW(window, WM_PACKET, 0, reinterpret_cast<LPARAM>(item))) {
+        delete item;
+        app.pending_events.fetch_sub(1);
+        app.skipped_on_screen.fetch_add(1);
+    }
+};
+\end{lstlisting}
+
+使用 \code{pending\_events} 统计待处理的窗口消息，在消息达到上限时增加界面限流计数，并限制继续投递的帧消息数量；在点击停止捕获或关闭窗口时，修改原子运行标志，等待抓包线程结束，再恢复按钮状态，选中列表中的某一帧，即可在底部详情区域看到该帧的完整字段信息。
+
+\section{程序实现}
+\subsection{设备枚举}
+在 \code{capture\_service.cpp} 中调用 \code{pcap\_findalldevs} 获取设备链表，逐个获取名称、描述和 IPv4 地址，保存到 \code{DeviceInfo} 列表，并在函数返回时通过 \code{DeviceList} 释放链表。
+\begin{lstlisting}
+pcap_if_t* raw = nullptr;
+char errbuf[PCAP_ERRBUF_SIZE]{};
+if (pcap_findalldevs(&raw, errbuf) != 0) {
+    error = std::string("pcap_findalldevs failed: ") + errbuf;
+    return false;
+}
+DeviceList all(raw);
+for (const pcap_if_t* current = all.get(); current != nullptr;
+     current = current->next) {
+    if (current->name == nullptr || *current->name == '\0') {
+        continue;
+    }
+    DeviceInfo info;
+    info.name = current->name;
+    info.description = current->description ? current->description : "(No description)";
+    for (const pcap_addr_t* address = current->addresses;
+         address != nullptr; address = address->next) {
+        const std::string ip = ipv4_to_string(address->addr);
+        if (!ip.empty()) {
+            info.ipv4_addresses.push_back(ip);
+        }
+    }
+    devices.push_back(std::move(info));
+}
+\end{lstlisting}
+
+\subsection{打开网卡}
+首先通过 \code{pcap\_open\_live} 打开选定的网卡，将最大捕获长度设为 65535 字节、混杂模式设为 1、接收超时设为 100 毫秒，再调用 \code{pcap\_datalink} 获取网卡的链路类型，按照 \code{DLT\_EN10MB} 对应的格式解析以太网帧。
+\begin{lstlisting}
+PcapHandle handle(
+    pcap_open_live(options.device_name.c_str(), 65535, 1, 100, errbuf)
+);
+if (!handle) {
+    error = std::string("pcap_open_live failed: ") + errbuf;
+    return false;
+}
+const int link_type = pcap_datalink(handle.get());
+if (link_type != DLT_EN10MB) {
+    error = "Unsupported link type " + std::to_string(link_type) +
+            ". Choose an Ethernet-compatible adapter.";
+    return false;
+}
+\end{lstlisting}
+
+\subsection{设置过滤条件}
+首先调用 \code{pcap\_compile} 编译输入的 BPF 表达式，再用 \code{pcap\_setfilter} 将规则应用到抓包句柄；在表达式存在语法错误时，通过 \code{pcap\_geterr} 获取并显示错误信息。
+\begin{lstlisting}
+CompiledFilter compiled;
+if (!options.filter.empty()) {
+    if (pcap_compile(handle.get(), &compiled.program,
+                     options.filter.c_str(), 1, PCAP_NETMASK_UNKNOWN) != 0) {
+        error = std::string("pcap_compile failed: ") + pcap_geterr(handle.get());
+        return false;
+    }
+    compiled.compiled = true;
+    if (pcap_setfilter(handle.get(), &compiled.program) != 0) {
+        error = std::string("pcap_setfilter failed: ") + pcap_geterr(handle.get());
+        return false;
+    }
+}
+\end{lstlisting}
+
+\subsection{捕获数据包}
+通过 \code{pcap\_next\_ex} 循环捕获数据，在暂时无数据时休眠 20 毫秒，再继续捕获；在取得数据帧时，先保存序号、时间戳和长度，再调用 \code{parse\_ethernet} 解析首部，并累计成功或失败的数量。
+\begin{lstlisting}
+pcap_pkthdr* header = nullptr;
+const u_char* packet = nullptr;
+const int rc = pcap_next_ex(handle.get(), &header, &packet);
+if (rc == 0) {
+    std::this_thread::sleep_for(std::chrono::milliseconds(20));
+    continue;
+}
+if (rc == -2) break;
+if (rc == -1) {
+    error = std::string("pcap_next_ex failed: ") + pcap_geterr(handle.get());
+    break;
+}
+PacketRecord record;
+record.sequence = ++stats.received;
+record.local_time = format_timestamp(header->ts);
+record.captured_length = header->caplen;
+record.wire_length = header->len;
+record.status = parse_ethernet(packet, header->caplen, record.frame);
+if (record.status == ParseStatus::Ok) ++stats.parsed;
+else ++stats.rejected;
+if (callbacks.on_packet) callbacks.on_packet(record);
+\end{lstlisting}
+
+\subsection{以太网帧解析}
+使用 \code{parse\_ethernet} 按固定偏移解析以太网首部，再按网络字节序合并类型字段的两个字节；在遇到 VLAN 标签时，每解析一层就增加 4 字节偏移，并根据剩余字节数判断该字段是否完整。
+\begin{lstlisting}
+std::uint16_t read_be16(const std::uint8_t* bytes) {
+    return static_cast<std::uint16_t>(
+        (static_cast<unsigned>(bytes[0]) << 8U) |
+        static_cast<unsigned>(bytes[1]));
+}
+
+result = EthernetFrame{};
+if (bytes == nullptr) return ParseStatus::InvalidInput;
+if (length < 14) return ParseStatus::ShortEthernetHeader;
+std::copy_n(bytes, 6, result.destination.begin());
+std::copy_n(bytes + 6, 6, result.source.begin());
+result.type_or_length = read_be16(bytes + 12);
+if (length > 14) {
+    result.first_byte = bytes[14];
+    result.has_first_byte = true;
+}
+\end{lstlisting}
+
+\subsection{停止和统计}
+在每轮捕获前，先判断运行标志及停止条件，使用 \code{stats.received} 累计取得的帧数，用 \code{steady\_clock} 计算已捕获的时间，并在达到指定帧数或时长时退出循环；在图形界面点击停止捕获，或在 CMD 中按 Ctrl+C，程序也会将运行标志设为 \code{false}。
+\begin{lstlisting}
+if (options.count > 0 && stats.received >= options.count) {
+    break;
+}
+if (options.duration_seconds > 0 &&
+    std::chrono::duration_cast<std::chrono::seconds>(
+        std::chrono::steady_clock::now() - start).count() >=
+        static_cast<std::int64_t>(options.duration_seconds)) {
+    break;
+}
+\end{lstlisting}
+
+在结束捕获时，调用 \code{pcap\_stats} 获取驱动统计，输出应用处理帧数、解析成功数和解析失败数，并分别列出驱动接收计数和应用处理帧数，比较两处计数的差别。
+
+\subsection{命令行处理}
+首先在 \code{main.cpp} 中解析启动参数，包括设备列表、网卡编号或名称、BPF 条件、抓包数量、捕获时长、日志路径和帮助信息；在检查数量和时长时，要求用户输入正整数，并对非法值输出错误提示，然后调用 \code{enumerate\_devices} 获取设备列表，将选中的设备名称写入 \code{CaptureOptions}，传给公共捕获函数。
+
+在命令行中通过回调将每帧的时间、长度、MAC 地址、类型字段和首字节交给 \code{Display} 输出，添加 \code{--log} 参数时，将相同内容写入指定文件；在按下 Ctrl+C 时，通过控制台中断处理函数修改 \code{running} 原子标志，结束抓包循环并输出统计，命令行和图形界面都使用 \code{PacketRecord} 中保存的字段。
+
+\Needspace{.39\textheight}
+在下图的启动命令中，可以看到 \code{--adapter 7} 和 \code{--count 10} 分别指定网卡编号和捕获数量，随后程序列出设备名称、描述及 IPv4 地址。
+\pic{shot26.png}{命令行指定网卡编号和捕获数量}
+
+\subsection{编译运行}
+首先使用 VS Code 的 Windows CMD 进入实验二目录，再运行 \code{build.bat}，依次编译命令行程序、图形界面程序和解析测试程序，测试部分输出 \code{[PASS] 47 assertions}。
+\begin{lstlisting}[language={}]
+cd /d D:\Study\NetworkLab2
+build.bat
+\end{lstlisting}
+\Needspace{.39\textheight}
+在编译输出中，可以看到 \code{main.cpp}、\code{display.cpp}、\code{capture\_service.cpp}、\code{ethernet\_parser.cpp} 和 \code{gui\_main.cpp} 等源文件，命令行、图形界面及解析测试程序均编译通过。
+\pic{shot02.png}{工程编译和解析测试结果}
+
+\Needspace{.39\textheight}
+运行 \code{bin\textbackslash packet\_capture\_gui.exe} 打开图形程序，也可以在 CMD 中继续输入命令。
+\pic{shot03.png}{启动图形程序的命令}
+
+\section{功能测试}
+\subsection{启动界面}
+\Needspace{.39\textheight}
+打开图形程序，可以看到顶部的网卡选择、过滤条件、抓包数量以及开始、停止按钮，下方分别为数据帧列表和详情区域；程序初始选中 WAN Miniport (Network Monitor)，数据帧列表为空，状态栏显示共 10 个网卡设备。
+\pic{shot04.png}{图形程序启动后的界面}
+
+\Needspace{.39\textheight}
+点击网卡下拉框，可以看到 WAN Miniport、蓝牙网卡、Intel Wi-Fi、VMware 虚拟网卡及 Loopback 接口，再选择 Intel(R) Wi-Fi 6E AX211 160MHz 捕获流量，该网卡对应的 IPv4 地址为 10.130.125.19。
+\pic{shot05.png}{本机网卡列表}
+
+\subsection{实时捕获}
+\Needspace{.39\textheight}
+首先选择 Intel Wi-Fi 网卡，将过滤条件留空、抓包数量设为 0，再点击开始捕获，使用浏览器产生网络流量，数据帧列表持续增加，状态栏显示已抓取 209 帧，解析失败和界面限流均为 0；点击其中一条记录，在底部详情区域可以看到该帧完整的 MAC 地址、长度、类型及首字节信息。
+\pic{shot06.png}{实时捕获中的数据帧列表}
+
+\Needspace{.39\textheight}
+点击停止捕获，状态栏变为已停止，本轮捕获 572 帧，解析失败 0 帧，界面限流 0 帧，驱动丢包 0 帧；程序在表格中保留所有已显示的帧，点击其中的记录，可以在底部详情区域看到对应帧的具体字段信息。
+\pic{shot07.png}{手动停止后的捕获统计}
+
+\subsection{指定数量}
+\Needspace{.39\textheight}
+将抓包数量设为 10，再次点击开始捕获，数据帧序号从 1 开始，程序在捕获到第 10 帧时自动停止，状态栏显示总捕获 10 帧、解析失败 0 帧；选择第 1 帧，在底部详情区域可以看到该帧的目的 MAC、源 MAC、类型字段 \enhex{0x0800} 和首字节 \enhex{0x45}。
+\pic{shot08.png}{指定捕获 10 帧的结果}
+
+\subsection{ICMP 过滤}
+\Needspace{.39\textheight}
+在过滤条件框中输入 \code{icmp}，点击开始捕获，图中的数据帧列表没有显示报文，状态栏显示已抓取 0 帧；此时尚未主动执行 Ping，\code{icmp} 条件仅保留 ICMP 报文，普通 TCP、UDP 流量不会出现在列表中，因此仅开始捕获并不能保证立即出现符合条件的数据帧。
+\pic{shot09.png}{ICMP 过滤开始时的空列表}
+
+为了主动产生符合 \code{icmp} 条件的流量，观察过滤后的捕获结果，保持捕获窗口运行，在另一个 CMD 窗口执行以下 Ping 命令，向目标地址发送 ICMP 请求：
+\begin{lstlisting}[language={}]
+ping -4 1.1.1.1 -n 6
+\end{lstlisting}
+\Needspace{.39\textheight}
+Ping 输出 6 次回复，发送 6 个、接收 6 个，丢失 0 个。
+\pic{shot10.png}{Ping 产生 ICMP 流量}
+
+\Needspace{.39\textheight}
+切回捕获程序，可以看到列表已增加至 12 帧，每帧长度都是 74 字节，解析失败 0 帧，程序按过滤条件选中了 Ping 发出的 ICMP 请求和收到的应答，各帧的以太网类型均为 \enhex{0x0800}，类型字段后的首字节均为 \enhex{0x45}。
+\pic{shot11.png}{ICMP 过滤后捕获到的数据帧}
+
+\subsection{IPv4 过滤}
+\Needspace{.39\textheight}
+使用 \code{ip} 过滤条件，将抓包数量设为 0，再点击开始捕获，列表持续增加 IPv4 帧，状态栏显示已抓取 102 帧，各帧长度不同，类型字段均为 \enhex{0x0800}。
+\pic{shot12.png}{IPv4 过滤期间的抓包列表}
+
+\Needspace{.39\textheight}
+将抓包数量改为 20，重新开始捕获，程序在捕获到第 20 帧时自动停止，解析失败 0 帧；在本轮捕获的帧中，可以看到首字节均为 \enhex{0x45}，对应 IPv4 版本 4、首部长度 20 字节。
+\pic{shot13.png}{IPv4 过滤的 20 帧结果}
+
+\subsection{传输层过滤}
+\Needspace{.39\textheight}
+选择 \code{tcp or udp} 过滤条件，将抓包数量设为 10，程序在捕获到 10 帧时自动停止，列表中的类型字段均为 \enhex{0x0800}，首字节为 \enhex{0x45}；使用该条件筛选 TCP、UDP 报文，表格中的类型字段 \enhex{0x0800} 表示这些帧封装了 IPv4。
+\pic{shot14.png}{TCP 或 UDP 条件下的捕获结果}
+
+\subsection{ARP 过滤}
+\Needspace{.39\textheight}
+首先在 CMD 中执行 \code{ipconfig}，可以在输出中看到 WLAN 的 IPv4 地址为 10.130.125.19、默认网关为 10.130.0.1，再使用该网关地址产生网络流量。
+\pic{shot15.png}{WLAN 地址及默认网关}
+
+\Needspace{.39\textheight}
+执行 \code{ping -4 10.130.0.1 -n 4}，四次请求均收到回复，同时在捕获程序中输入 \code{arp} 过滤条件，捕获本机网卡上的 ARP 报文。
+\pic{shot16.png}{访问默认网关的 Ping 结果}
+
+\Needspace{.39\textheight}
+ARP 过滤结果显示 6 帧报文，长度分别为 56 字节或 42 字节，解析失败 0 帧，两端 MAC 地址随报文方向交换，类型字段均为 \enhex{0x0806}，其后的首字节均为 \enhex{0x00}，对应 ARP 硬件类型字段的高字节。
+\pic{shot17.png}{ARP 数据帧的 MAC、类型和首字节}
+
+\subsection{输入错误}
+\Needspace{.39\textheight}
+将抓包数量设为 \code{-1}，再点击开始捕获，可以看到输入错误提示，要求使用非负整数，其中 0 表示不限数量，关闭提示框，即可重新填写抓包参数。
+\pic{shot21.png}{抓包数量为负数时的提示}
+
+\Needspace{.39\textheight}
+输入 \code{this is not a valid filter} 作为过滤条件，再点击开始捕获，程序提示 \code{pcap\_compile failed} 和 \code{syntax error}，此次未启动抓包，列表为空，总捕获数为 0。
+\pic{shot23.png}{非法 BPF 表达式的错误提示}
+
+\subsection{命令行枚举网卡}
+\Needspace{.47\textheight}
+使用 Windows CMD 执行 \code{bin\textbackslash packet\_capture.exe --list}，可以在输出中看到 10 个 Npcap 设备的编号、名称和 IPv4 地址，其中 Intel Wi-Fi 位于第 7 项，对应的地址为 10.130.125.19。
+\tallpic{shot25.png}{命令行输出的设备列表}
+
+\subsection{命令行定量捕获}
+根据本次设备列表，执行以下命令捕获 10 帧：
+\begin{lstlisting}[language={}]
+bin\packet_capture.exe --adapter 7 --count 10
+\end{lstlisting}
+\Needspace{.47\textheight}
+在命令行输出中，可以看到程序按帧序号显示的捕获时间、目的 MAC、源 MAC、类型字段和首字节，其中第 1 帧的捕获长度为 100 字节，类型字段为 \enhex{0x0800}，首字节为 \enhex{0x45}。
+\tallpic{shot27.png}{命令行逐帧输出的前八帧}
+
+\Needspace{.39\textheight}
+程序打印第 9、10 帧，并按数量上限停止，输出 \code{Frames=10, parsed=10, skipped=0}，驱动接收 10 帧、丢包 0 帧，最后返回 CMD。
+\pic{shot28.png}{第十帧及结束统计}
+
+\subsection{定时捕获}
+\Needspace{.47\textheight}
+执行 \code{bin\textbackslash packet\_capture.exe --adapter 7 --duration 5}，将捕获时间设为 5 秒，过滤条件留空，可以看到选中的网卡，以及程序逐条打印的 IPv4 帧记录。
+\tallpic{shot29.png}{五秒定时捕获的启动与帧记录}
+
+\Needspace{.39\textheight}
+程序在达到 5 秒时自动停止，输出捕获 155 帧、解析成功 155 帧、跳过 0 帧，驱动接收计数为 159，驱动丢包和接口丢包均为 0，并分别列出应用处理帧数和驱动接收数。
+\pic{shot30.png}{五秒定时捕获的结束统计}
+
+\subsection{日志保存}
+首先使用 CMD 创建 \path{evidence\logs} 文件夹，再为抓包命令添加 \code{--log} 参数，将捕获数量设为 3 帧，并将文本日志保存到 \path{evidence\logs\capture.txt}。
+\begin{lstlisting}[language={}]
+if not exist "evidence\logs" mkdir "evidence\logs"
+bin\packet_capture.exe --adapter 7 --count 3 --log "evidence\logs\capture.txt"
+\end{lstlisting}
+\Needspace{.47\textheight}
+执行命令，程序首先列出网卡设备，再输出选中的抓包网卡和捕获记录。
+\tallpic{shot32.png}{命令行指定日志文件路径}
+
+\Needspace{.39\textheight}
+程序在捕获到 3 帧时自动停止，输出三条帧记录及 \code{Frames=3, parsed=3, skipped=0}，驱动丢包 0 帧，再输入 \code{notepad evidence\textbackslash logs\textbackslash capture.txt}，打开保存的文本日志。
+\pic{shot33.png}{三帧抓包结果及日志打开命令}
+
+\Needspace{.39\textheight}
+打开保存的日志，可以看到三帧的捕获时间、两端 MAC、类型字段 \enhex{0x0800}、首字节 \enhex{0x45} 和结束统计，这些记录与终端输出一致。
+\pic{shot31.png}{保存到文本文件的抓包日志}
+
+\subsection{按名称指定网卡}
+使用 \code{--device} 输入 Intel Wi-Fi 的完整 Npcap 设备名称，将抓包数量设为 3，再执行命令，程序输出选中的设备路径。
+\begin{lstlisting}[language={}]
+bin\packet_capture.exe --device "\Device\NPF_{39C2AA47-6439-4A33-BE8B-5967D2894FFD}" --count 3
+\end{lstlisting}
+\tallpic{shot34.png}{通过设备名称指定 Intel Wi-Fi 网卡}
+
+\Needspace{.39\textheight}
+程序成功解析了本次捕获的 3 帧，驱动接收计数为 13、丢包 0 帧，并在捕获到第 3 帧时按数量上限停止，输出本轮的捕获统计。
+\pic{shot35.png}{按设备名称抓取三帧的结果}
+
+\subsection{非法设备编号}
+\Needspace{.39\textheight}
+将 \code{--adapter} 的参数设为 \code{99999}，程序列出当前设备，并提示 \code{Device index out of range}，然后返回 CMD。
+\pic{shot36.png}{非法网卡编号的处理结果}
+
+\subsection{未知命令参数}
+\Needspace{.39\textheight}
+输入未知参数 \code{--unknown}，程序提示 \code{Unknown option: --unknown}，并列出支持的参数及用法示例。
+\pic{shot37.png}{未知参数的提示信息}
+
+\subsection{手动停止}
+\Needspace{.47\textheight}
+首先使用 CMD 的 \code{--device} 参数选择 Intel Wi-Fi，再设置 \code{--filter "icmp"}，帧数和时长均保持不限；开始捕获，可以看到程序持续输出 ICMP 报文对应的以太网帧，类型字段显示 IPv4。
+\tallpic{shot39.png}{命令行持续捕获 ICMP 数据帧}
+
+\Needspace{.39\textheight}
+在另一个 CMD 窗口执行 \code{ping -4 1.1.1.1 -n 2}，两次请求均收到回复，发送与接收各为 2 次。
+\pic{shot38.png}{手动触发两次 ICMP 请求}
+
+\Needspace{.39\textheight}
+回到抓包终端按 Ctrl+C，程序随即停止，并输出统计：捕获 16 帧、解析成功 16 帧、跳过 0 帧，驱动丢包 0 帧，再返回 \path{D:\Study\NetworkLab2} 命令提示符。
+\pic{shot40.png}{Ctrl+C 后的捕获统计}
+
+\subsection{抓包数量参数}
+\Needspace{.39\textheight}
+执行带 \code{--count 0} 参数的命令，程序提示 \code{Invalid positive integer for --count: 0} 并显示帮助信息，该命令行参数要求输入正整数，而在图形界面中，将抓包数量设为 0 则表示持续捕获。
+\pic{shot41.png}{无效抓包数量的提示}
+
+\subsection{重复捕获}
+\Needspace{.39\textheight}
+重新打开图形程序，可以看到数据帧列表初始为空，网卡列表显示当前共 10 个设备。
+\pic{shot42.png}{再次打开的图形程序}
+
+\Needspace{.39\textheight}
+首先选择 Intel Wi-Fi，将抓包数量设为 3，完成一轮捕获，再将数量改为 5，重新点击开始捕获，可以看到第二轮列表显示本轮捕获的 5 帧，序号重新从 1 开始，解析失败 0 帧。
+\pic{shot43.png}{第二轮五帧捕获结果}
+
+\Needspace{.39\textheight}
+首先停止捕获，再点击刷新网卡，状态栏显示\textbf{网卡列表已更新，共 10 个}，下拉框回到列表中的初始设备，表格仍保留本轮捕获的 5 帧。
+\pic{shot44.png}{刷新网卡后的界面状态}
+
+\subsection{窗口缩放}
+\Needspace{.39\textheight}
+拖动窗口边缘，缩小图形界面，可以看到网卡选择、过滤条件、按钮和数据帧列表仍正常显示，再拖动水平滚动条，可以看到表格中原先移出可见区域的字段信息。
+\pic{shot45.png}{缩小窗口后的界面}
+
+\Needspace{.39\textheight}
+继续缩小窗口，可以看到列表显示的行数减少，部分字段移出可见区域，程序仍在底部保留帧详情，拖动滚动条即可看到其余字段信息。
+\pic{shot46.png}{再次缩小窗口后的显示状态}
+
+\subsection{窗口关闭}
+\Needspace{.39\textheight}
+首先将抓包数量设为 0，再点击开始捕获，在状态栏显示正在捕获、已抓取 30 帧时，直接点击窗口右上角的关闭按钮，程序关闭窗口，且未弹出错误提示。
+\pic{shot47.png}{关闭前持续捕获中的界面}
+
+\Needspace{.39\textheight}
+再次启动图形程序，可以看到网卡列表重新显示 10 个设备，数据帧列表为空，抓包数量为 0，并且可以使用开始捕获按钮。
+\pic{shot48.png}{关闭后重新启动的图形程序}
+
+\subsection{帧详情}
+\Needspace{.39\textheight}
+使用图形界面捕获一组数据帧，手动停止，可以看到总捕获数为 35 帧，再点击第 1 帧，在底部详情区域可以看到该帧的序号为 1、长度为 55 字节，以及两端 MAC 地址。
+\pic{shot49.png}{选中第一帧时的字段详情}
+
+\Needspace{.39\textheight}
+点击第 5 帧，列表高亮显示该行，在底部详情区域可以看到该帧的长度为 54 字节，源 MAC 为 \code{60-45-2E-DE-C2-4A}，目的 MAC 为 \code{00-00-5E-00-01-FE}，类型字段为 \enhex{0x0800}，首字节为 \enhex{0x45}。
+\pic{shot50.png}{选中第五帧时的字段详情}
+
+\subsection{捕获时长参数}
+\Needspace{.39\textheight}
+将命令行参数设为 \code{--duration 0}，程序提示 \code{Invalid positive integer for --duration: 0} 并返回 CMD，定时捕获参数要求输入正整数秒数。
+\pic{shot51.png}{无效捕获时长的提示}
+
+\subsection{非法 BPF 条件}
+\Needspace{.39\textheight}
+首先通过 \code{--device} 指定 Intel Wi-Fi，再使用 \code{--filter} 输入 \code{this is not a valid filter}，可以看到 \code{pcap\_compile failed: can't parse filter expression: syntax error} 提示，帧记录列表保持为空。
+\pic{shot52.png}{命令行非法 BPF 表达式的报错}
+
+\subsection{帮助信息}
+\Needspace{.39\textheight}
+运行 \code{bin\textbackslash packet\_capture.exe --help}，可以看到 \code{--list}、\code{--adapter}、\code{--device}、\code{--filter}、\code{--count}、\code{--duration}、\code{--log} 和 \code{--help} 的用法，以及对应的运行示例。
+\pic{shot53.png}{命令行帮助信息}
+
+\section{抓包分析}
+\subsection{IPv4 帧}
+观察无过滤、\code{ip} 和 \code{tcp or udp} 的捕获结果，可以看到多条帧的类型字段为 \enhex{0x0800}、首字节为 \enhex{0x45}，其中 \enhex{0x0800} 位于以太网帧偏移 12～13，\enhex{0x45} 位于偏移 14，再将 \enhex{0x45} 拆成高、低四位，分别得到 IPv4 版本 4 和首部长度 20 字节。
+
+\subsection{ARP 帧}
+\Needspace{.39\textheight}
+使用 Wireshark 打开 WLAN 抓包结果，在显示过滤栏输入 \code{arp}，可以看到多条 ARP 请求和应答，其中第 151 帧长度为 56 字节，内容为 \code{Who has 10.130.125.19? Tell 10.130.0.1}，第 152 帧则给出对应的 MAC 地址回复。
+\pic{shot18.png}{Wireshark 中的 ARP 请求和应答}
+
+\Needspace{.39\textheight}
+选中第 151 帧，展开 Ethernet II 首部，可以看到目的 MAC 为 \code{60:45:2e:de:c2:4a}，源 MAC 为 \code{00:00:5e:00:01:fe}，类型字段为 \code{ARP (0x0806)}，在 ARP 解析区域还可以看到 Address Resolution Protocol (request) 的请求信息。
+\pic{shot19.png}{展开 ARP 帧的以太网首部}
+
+在十六进制字节区可以看到该帧的前 16 个字节为：
+\begin{center}
+\enhex{60 45 2E DE C2 4A 00 00 5E 00 01 FE 08 06 00 01}
+\end{center}
+\Needspace{.39\textheight}
+按照以太网帧首部的偏移，先分析前 6 字节的目的 MAC，再分析偏移 6～11 的源 MAC、偏移 12～13 的类型字段 \enhex{08 06} 和偏移 14 的 \enhex{00}，C++ 程序按相同位置解析，在 ARP 捕获列表中输出 \enhex{0x0806} 和 \enhex{0x00}，与原始字节对应。
+\pic{shot20.png}{ARP 帧首部与十六进制原始字节}
+
+在 Wireshark 的 56 字节 ARP 记录中，可以看到 Trailer 字段，另一组 ARP 帧的长度为 42 字节；按照 Ethernet／IPv4 ARP 报文的结构，将 14 字节以太网首部和 28 字节 ARP 内容相加，得到 42 字节，部分帧还包含附加尾部字节，因此记录长度不同，而 MAC、类型字段和第 14 字节的偏移保持一致。
+
+\subsection{捕获统计}
+使用 5 秒定时捕获，程序处理并解析 155 帧，驱动接收计数为 159、丢包 0 帧；再使用设备名称指定抓取 3 帧，可以看到驱动接收计数为 13、丢包 0 帧，程序在达到停止条件时结束捕获，因此应用处理帧数可以小于驱动接收计数。
+
+\section{问题分析}
+\subsection{定时捕获}
+在测试 \code{--duration 5} 时，程序达到设定时间就退出，终端显示 \code{Frames=0}，首先在同一网卡上执行 \code{--count 3}，发现能够捕获数据帧，再检查 \code{capture\_live} 中的数据接收代码，发现程序采用非阻塞模式，在暂时没有可交付的数据时，调用 \code{pcap\_next\_ex} 得到返回值 0，于是将 Npcap 的最小数据交付阈值设为 0，让程序及时取得缓冲区中的数据。
+\Needspace{.16\textheight}
+\begin{lstlisting}
+// 设置最小数据交付阈值。
+if (pcap_setmintocopy(handle.get(), 0) != 0) {
+    error = std::string("pcap_setmintocopy failed: ") + pcap_geterr(handle.get());
+    return false;
+}
+\end{lstlisting}
+
+首先在 \code{capture\_live} 中调用打开网卡的接口，创建 \code{PcapHandle} 类型的 \code{handle} 句柄，再设置非阻塞模式，并使用同一句柄将最小数据交付阈值设为 0，让程序及时取得网卡缓冲区中的数据，再编译，执行 \code{--duration 5}，可以看到程序捕获 155 帧、解析失败 0 帧，定时捕获能够在规定时间内显示数据帧。
+
+\subsection{网卡编号}
+多次查看网卡列表，可以看到 Intel Wi-Fi 分别位于第 7 项和第 5 项，设备编号随着枚举顺序发生变化，因此在使用编号指定网卡时，按照当前列表输入，再改用 \code{--device} 传入完整的 Npcap 设备名称，可以看到程序抓取 3 帧，并按设置的数量自动停止。
+
+\subsection{窗口布局}
+缩小图形窗口，可以看到数据帧表格的可见宽度减小，拖动水平滚动条可以看到右侧字段的信息，底部详情区域也出现了滚动条；再将窗口放大，可以继续看到各列内容，程序仍在列表中保留已捕获的记录，各个按钮均能正常使用。
+
+\section{实验总结}
+这次实验中，我使用 C++17 和 Npcap 编写了以太网数据包捕获程序，分别编写网卡枚举、实时抓包、以太网首部解析，以及命令行和图形界面的显示部分，实际捕获了 IPv4、ARP 和 ICMP 流量，使用 BPF 表达式筛选报文，并在 Wireshark 中查看十六进制原始数据，比较了 MAC 地址、类型字段和首字节。
+
+在测试定时抓包时，我发现程序达到设定时间就退出，终端中的帧记录为空，再使用同一网卡执行定量抓包，可以看到数据帧，因此检查了非阻塞模式下的数据接收代码，并在 \code{capture\_live} 中打开网卡、设置非阻塞模式，再设置 Npcap 的最小数据交付阈值，让程序及时取得缓冲区中的数据，重新编译并运行定时抓包，可以在设定时间内看到数据帧。
+
+我学会了使用 Npcap 获取网卡列表、打开捕获设备、设置 BPF 过滤条件及捕获原始数据帧，能够按以太网首部的字节位置解析各字段，并按照网络字节序计算类型值；在 Wireshark 中对照报文的原始字节，我也认识到网络帧的封装结构、抓包缓冲区的数据交付条件，以及应用程序计数和驱动统计之间的差别。
+
+\section{参考文献}
+{\small\emergencystretch=1.5em
+\begin{enumerate}[label={[\arabic*]},leftmargin=2.6em,itemsep=0em,topsep=0em]
+\item Nmap Project．Npcap User's Guide．\url{https://npcap.com/guide/}。
+\item The Tcpdump Group．libpcap Manual Pages．\url{https://www.tcpdump.org/manpages/}。
+\item Plummer D C．RFC 826: An Ethernet Address Resolution Protocol．IETF，1982．\url{https://www.rfc-editor.org/rfc/rfc826}。
+\item Hornig C．RFC 894: A Standard for the Transmission of IP Datagrams over Ethernet Networks．IETF，1984．\url{https://www.rfc-editor.org/rfc/rfc894}。
+\item Wireshark Foundation．Wireshark User's Guide．\url{https://www.wireshark.org/docs/wsug_html_chunked/}。
+\item Microsoft．Win32 API Reference．Microsoft Learn．\url{https://learn.microsoft.com/en-us/windows/win32/}。
+\end{enumerate}
+}
+\end{document}

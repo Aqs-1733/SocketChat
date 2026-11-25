@@ -1,13 +1,6 @@
 bin/
+build/
 *.obj
-*.o
 *.pdb
 *.ilk
-*.pyc
-__pycache__/
-.DS_Store
-docs/*.aux
-docs/*.log
-docs/*.out
-docs/*.toc
-docs/*.synctex.gz
+*.log

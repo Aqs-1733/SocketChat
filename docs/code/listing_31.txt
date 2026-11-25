@@ -1,1 +1,0 @@
-bin\gui_client.exe --name Charlie
