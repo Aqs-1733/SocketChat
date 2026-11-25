@@ -1,69 +1,129 @@
-# SocketChat
+# 计算机网络实验三：可靠 UDP 文件传输
 
-用 C++ 编写的 TCP 多人聊天室，包含服务器、命令行客户端和 Win32 图形客户端。
+## 工程内容
 
-## 使用方法
+- `reliable_udp.cpp`：全部 C++17 源码。用 `send`、`recv`、`route` 三种模式运行同一个程序。
+- `gui.cpp`：原生 Win32 图形界面，自动启动三个协议进程并汇总实时日志。
+- `build.bat`：Windows/MSVC 编译脚本。
 
-在 Visual Studio 的 **x64 Native Tools Command Prompt** 中编译：
+不依赖第三方 Socket 框架、Python、Qt 或网页组件，直接调用 Winsock2 基本函数。保留命令行运行方式，另提供原生 Win32 单页演示界面。`route` 模式为内置模拟路由器，可随时调整丢包率和单向转发时延。
+
+## Windows 编译
+
+打开 **x64 Native Tools Command Prompt for VS**，切换到本目录，执行：
 
 ```bat
-cd /d D:\Study\NetworkLab1\SocketChat
 build.bat
-build_gui.bat
 ```
 
-在 PowerShell 中启动演示，会打开服务器和 Alice、Bob、Charlie 三个客户端：
+生成 `reliable_udp.exe`（协议程序）及 `reliable_udp_gui.exe`（图形界面）。两个 EXE 须位于同一个目录。Windows 端需要安装 Visual Studio C++ 工具集。无需 Npcap。
 
-```powershell
-cd D:\Study\NetworkLab1\SocketChat
-powershell -ExecutionPolicy Bypass -File .\scripts\open_chat_windows.ps1
+## 图形界面演示（推荐）
+
+双击 `reliable_udp_gui.exe`。
+
+1. 点击“浏览”选择老师指定文件，默认接收文件名为同目录的 `received_原文件名`；可另存到其他位置。已有目标文件会提示覆盖，不能选择源文件作为接收文件。
+2. 修改窗口大小（1~4096 包）、丢包率（0~99%，整数）、单向时延（0~10000 ms）、重传超时（100~60000 ms）、路由端口（1024~65534）。接收端端口自动设为路由端口加一，发送与接收采用相同窗口大小。参数应在开始之前设置。
+3. 点击“开始传输”。GUI 启动三个独立的 C++ 进程，实际在本机通过 UDP Socket 通信。匿名管道读取日志，50ms 定时器刷新界面，不在窗口线程运行网络协议。
+4. 进度条根据连续确认包的数量更新；下方显示窗口边界、实际重传次数和 RTT，结束后显示发送端统计的平均 RTT、耗时及吞吐率。只有接收端校验成功且发送端收到 FIN_ACK 并正常退出，才显示传输完成。接收端此后不必继续本地等待重复 FIN，GUI 自动结束剩余进程。
+5. 点击“停止”可取消正在进行的测试（接收文件可能不完整）；更换参数后可再次运行。清空日志不会中断传输。界面保留近期日志，长文件传输时会自动截去最早的部分。
+6. 讲解时用 `certutil -hashfile 文件路径 SHA256` 或 `fc /b` 额外验证文件一致性。
+
+图形界面默认使用本机回环地址，跨主机传输仍可使用下方命令行模式。此版本没有改变原有报文格式、选择重传或连接状态机，只增加图形操作、即时日志输出和 Unicode 文件路径支持。
+
+## 完整演示：三个命令行窗口
+
+在三个窗口都切换到程序目录，按以下顺序运行。
+
+**窗口 1：接收方**（窗口容量 16，超时参数 250 毫秒）
+
+```bat
+reliable_udp.exe recv received.bin 9001 16 250
 ```
 
-在每个窗口点击“连接服务器”。默认地址为 `127.0.0.1`，端口为 `8888`。选择“公共聊天室”发送公聊消息，点击在线用户进入私聊，在群组页面填写群名、勾选成员后建立群聊。聊天记录显示在上方，连接提示和成员变动显示在下方。
+**窗口 2：路由器**（25% 丢包、单方向 40 毫秒延迟）
 
-关闭某个客户端后，可以单独重新打开，例如：
-
-```powershell
-Start-Process .\bin\gui_client.exe -ArgumentList '--name Bob'
+```bat
+reliable_udp.exe route 9000 127.0.0.1 9001 25 40
 ```
 
-也可以分别启动服务器和命令行客户端：
+**窗口 3：发送方**（发送本目录已存在的任意文件，例如 `test.bin`）
 
-```powershell
-.\bin\server.exe 8888
+```bat
+reliable_udp.exe send test.bin 127.0.0.1 9000 16 250
 ```
 
-在另一个 PowerShell 窗口中输入：
+发送完成后用 Windows 命令核对原文件与接收文件：
 
-```powershell
-cd D:\Study\NetworkLab1\SocketChat
-.\bin\client.exe 127.0.0.1 8888 Alice
+```bat
+certutil -hashfile test.bin SHA256
+certutil -hashfile received.bin SHA256
 ```
 
-直接输入文字发送公聊消息；输入 `/pm Bob 内容` 发送私聊，`/group create Study` 建群，`/group join Study` 入群，`/g Study 内容` 发送群消息，`/group leave Study` 退群，`/list` 显示在线用户，`/groups` 显示群列表，`/quit` 退出。昵称和群名支持字母、数字、下划线，长度为 1～16 个字符。
+两个 SHA-256 一致表示接收文件的内容与源文件一致。也可运行 `fc /b test.bin received.bin`。
 
-在 MSVC 开发者环境中运行自动测试：
+如果不经过模拟路由器，发送方把目标端口从 `9000` 改成 `9001` 即可。
 
-```powershell
-powershell -ExecutionPolicy Bypass -File .\run_tests_windows.ps1
-build_gui_tests.bat
-powershell -ExecutionPolicy Bypass -File .\scripts\run_gui_tests_windows.ps1
-```
+## 助教随机修改参数
 
-测试日志保存在 `evidence/logs`。使用 Wireshark 抓取本机演示时，选择 Npcap 回环接口，填写显示过滤器 `tcp.port == 8888`，在连接客户端前开始捕获，演示结束后保存为 `.pcapng`。
+- 修改**发送窗口**：发送命令最后两个参数中，`16` 是发送窗口大小。接收方也有自己的接收窗口，建议设置相同值（例如 4、8、16、32）。
+- 修改**丢包率**：修改路由器命令中的 `25`，可设 `0` 到 `99`，表示独立随机丢弃每个经过的 UDP 数据报，包括控制报文。
+- 修改**时延**：修改路由器命令末尾的 `40`，单位为毫秒，**每个方向**各增加 40ms，往返至少约 80ms。
+- 修改**重传超时**：`send` 和 `recv` 的末尾 `250` 为超时时间（毫秒）。通常建议设得大于预期 RTT；较大延迟场景可设为 `800` 或 `1500`。
+- 修改模拟路由器参数需停止后重新运行路由器，接收方、发送方按顺序重新运行一次新的传输。
 
-## 功能设计
+## 协议说明
 
-采用 C/S 架构，由服务器接收连接、管理用户和群组、转发消息，每条客户端连接使用一个工作线程。公聊发送给所有在线用户，私聊发送给聊天双方，群聊发送给群成员，转发时加入服务器时间。
+使用 UDP 模拟不可靠网络；由应用层实现**建立连接、数据校验、流水线发送、固定窗口、选择确认、按报文超时重传和连接关闭**。这不是操作系统 TCP，也没有使用 TCP 的可靠交付能力。
 
-网络通信直接调用 Winsock2 的 `socket`、`bind`、`listen`、`accept`、`connect`、`send` 和 `recv` 等基本函数。使用 UTF-8 传送中英文，以换行符划分消息，在接收缓存中拼接完整消息；发送时循环处理尚未写出的字节，并用发送锁保持同一连接上的消息顺序。
+统一报文首部为 32 字节：
 
-- `src/server.cpp`：连接处理、登录、消息转发、群成员管理、退出。
-- `src/client.cpp`：命令行输入、接收线程、消息显示。
-- `src/gui_client.cpp`：原生 Win32 窗口、会话切换、成员选择、聊天记录、连接动态。
-- `src/protocol.h`、`src/protocol.cpp`：消息格式、分帧、完整发送、UTF-8 校验、时间戳。
-- `src/net_platform.h`：套接字初始化、关闭和平台差异处理。
-- `tests/`：协议测试、网络集成测试、界面布局测试。
-- `docs/`：报告的 LaTeX 源文件、截图和代码片段，使用 XeLaTeX 或 Tectonic 编译 `main.tex`。
+| 偏移 | 长度 | 字段 | 含义 |
+| --- | --- | --- | --- |
+| 0 | 4 | magic | `RTP1` 标识 |
+| 4 | 4 | session | 随机会话标识 |
+| 8 | 4 | type | 报文种类 |
+| 12 | 4 | seq | DATA/ACK 的包序号；SYN/FIN 为文件校验值 |
+| 16 | 4 | length | 数据载荷长度 |
+| 20 | 4 | checksum | 本报文 FNV-1a 32 位校验值，计算前该字段置零 |
+| 24 | 8 | info | SYN/FIN 为文件字节数 |
+| 32 | 0~1200 | payload | 数据载荷 |
 
-窗口中的待回显数用于观察应用消息是否收到回应。TCP 重传等传输现象在 Wireshark 中观察。
+多字节字段按网络字节序编码。数据包从序号 0 开始，最大载荷 1200 字节。文件级校验值同样使用 FNV-1a 32 位算法，覆盖原始文件全部字节，检测完成后才发送 `FIN_ACK`。
+
+报文种类：`SYN`、`SYN_ACK`、`DATA`、`ACK`、`FIN`、`FIN_ACK`、`BAD`。
+
+### 建立、数据传输、关闭的顺序
+
+1. 发送方用 `SYN` 发送文件大小、文件校验值和会话标识，超时后重发；接收方以 `SYN_ACK` 回应。
+2. 发送方仅发送 `[base, base+window)` 内的未发送报文。每个 DATA 使用独立序号，发送方保存未确认报文与发送时间。
+3. 接收方检查会话、报文校验值、文件长度及窗口范围。窗口内的乱序 DATA 暂存；对收到的包逐包回复 `ACK(seq)`，并把已经连续到达的数据写入文件。
+4. 发送方对 ACK 分别标记，清理相应缓存；连续确认的包从 `base` 移走，窗口随之右移。超时只重发尚未确认的报文，因此采用**选择重传（Selective Repeat，SR）**。
+5. 全部 DATA 获得确认后，发送方发送 `FIN`。接收方核实文件大小和全文件校验值，通过则回复 `FIN_ACK`，未通过回复 `BAD`。发送方未收到 `FIN_ACK` 会重发 FIN；接收方结束前短暂保留会话以答复重复 FIN。
+
+日志：`[SYN]`、`[SEND]`、`[RECV]`、`[ACK]`、`[RETX]`、`[WINDOW]`、`[DROP]`、`[FIN]`、`[SUCCESS]`、`[RESULT]`。ACK 会显示未重传数据报文的往返时延 RTT；发送结束显示有效样本的平均 RTT、重传次数，以及总字节数、耗时和平均有效吞吐率。
+
+## 实际验证范围（原协议版本）
+
+在 Linux 环境使用 GCC 编译，运行过以下端到端校验，并逐字节比较源文件与接收文件：
+
+| 文件 | 丢包率 | 单向时延 | 窗口 | 结果 |
+| --- | --- | --- | --- | --- |
+| 0 字节 | 0% | 0ms | 4 | PASS |
+| 15335 字节 | 0% | 0ms | 2 | PASS |
+| 150000 字节 | 25% | 40ms | 16 | PASS |
+| 500000 字节 | 35% | 75ms | 32 | PASS |
+| 0 字节 | 40% | 20ms | 4 | PASS |
+
+GUI 版后端另使用 GCC 编译并测试：32769 字节、中文及空格文件名、窗口 8、20% 丢包、30ms 单向时延、250ms 超时，发送进程正常退出，接收端校验通过，收发文件逐字节一致。Windows/MSVC 的编译和实际 Windows GUI 截图尚未在此环境完成，应在自己的 Windows 机器上用 `build.bat` 再验证。高丢包、高时延和较小窗口会明显增加传输时间，尤其在超时时间设置过小或窗口较小时。
+
+## 5~6 分钟讲解建议
+
+- 第 1 分钟：介绍 UDP 不提供确认和重传，说明为什么在用户层做可靠协议，指出 32 字节报文首部。
+- 第 2 分钟：解释 SYN/SYN_ACK 建连，DATA 序号、校验、ACK 序号、FIN/FIN_ACK 关闭。
+- 第 3 分钟：指着代码里的 `base`、`next`、`pending`、`buffered` 讲发送窗口、接收窗口以及乱序缓存。
+- 第 4 分钟：运行 25% 丢包演示，指着 `[DROP]`、`[RETX]` 和 `[WINDOW]` 解释选择重传。
+- 第 5 分钟：显示吞吐量、RTT、校验成功，使用 `certutil` 对比文件；简要对比不同窗口和丢包率。
+- 剩余时间：解释关键实现、排查日志并回答问题。
+
+注意：这里只记录代码已经实现以及 Linux 下已验证的结果；提交实验报告时应补齐自己 Windows 实机的实际截图和数据，不能把上述记录当作 Windows 已测试结果。
