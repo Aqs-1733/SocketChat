@@ -329,9 +329,8 @@ void saveLog() {
 }
 void setup() {
     normalFont=font(15,FW_NORMAL); titleFont=font(26,FW_BOLD); valueFont=font(23,FW_SEMIBOLD); logFont=font(14,FW_NORMAL,L"Consolas");
-    HWND h=label(L"可靠传输协议  /  Reliable UDP",26,18,800,36);
+    HWND h=label(L"计网实验三 可靠传输协议",26,26,800,36);
     SendMessageW(h,WM_SETFONT,(WPARAM)titleFont,TRUE);
-    label(L"计算机网络实验三    ·    Selective Repeat / UDP",28,59,800);
     label(L"01   文件传输",26,104,180);
     label(L"发送文件",26,142,84); input=edit(L"",116,137,650); button(L"浏览...",780,136,100,OPEN_FILE);
     label(L"接收文件",26,181,84); output=edit(L"",116,176,650); button(L"另存为...",780,175,100,SAVE_FILE);
